@@ -1,0 +1,18 @@
+# Each service is independent: start one with `docker compose up --build backend`
+# or `docker compose up --build frontend`, or both with `docker compose up --build`.
+services:
+  backend:
+    build: ./backend
+    container_name: nursery-backend
+    environment:
+      PORT: 3000
+      API_PREFIX: api
+      CORS_ORIGIN: http://localhost:4200
+    ports:
+      - '3000:3000'
+
+  frontend:
+    build: ./frontend
+    container_name: nursery-frontend
+    ports:
+      - '4200:80'

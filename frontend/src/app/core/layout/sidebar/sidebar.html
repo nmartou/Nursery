@@ -1,0 +1,19 @@
+<aside class="sidebar">
+  <div class="sidebar__brand">Nursery</div>
+  <nav>
+    <ul class="sidebar__list">
+      @for (item of items; track item.route) {
+        <li>
+          <a
+            class="sidebar__link"
+            [routerLink]="item.route"
+            routerLinkActive="sidebar__link--active"
+          >
+            <span aria-hidden="true">{{ item.icon }}</span>
+            {{ item.label }}
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+</aside>

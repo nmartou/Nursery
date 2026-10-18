@@ -1,0 +1,28 @@
+:root {
+  --sidebar-width: 15rem;
+  --color-background: #f6f7fb;
+  --color-surface: #ffffff;
+  --color-border: #e3e6ef;
+  --color-text: #1f2430;
+  --color-text-muted: #5b6275;
+  --color-error: #c0392b;
+  --color-sidebar: #2f3e66;
+  --color-sidebar-text: #f1f3fa;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+}
