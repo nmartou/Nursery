@@ -5,9 +5,7 @@ API REST de l'application Nursery. Monolithe NestJS organisé en modules et en c
 ## Prérequis
 
 - Node.js 24+
-- npm 10+
-
-> Le projet contient un `.npmrc` avec `legacy-peer-deps=true` pour contourner un bug de résolution des peer-dependencies de npm 10.
+- npm 11+ (via corepack : `corepack install -g npm@11`)
 
 ## Commandes de base
 

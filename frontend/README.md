@@ -5,9 +5,7 @@ Interface web de l'application Nursery, en Angular 21 (composants standalone, si
 ## Prérequis
 
 - Node.js 24+ (Angular 21 ; Angular 22 demande Node ≥ 24.15)
-- npm 10+
-
-> Le projet contient un `.npmrc` avec `legacy-peer-deps=true` pour contourner un bug de résolution des peer-dependencies de npm 10.
+- npm 11+ (via corepack : `corepack install -g npm@11`)
 
 ## Commandes de base
 
