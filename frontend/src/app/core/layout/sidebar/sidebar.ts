@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { NAVIGATION_ITEMS } from '../../constants/navigation.constants';
 
@@ -10,4 +10,9 @@ import { NAVIGATION_ITEMS } from '../../constants/navigation.constants';
 })
 export class Sidebar {
   protected readonly items = NAVIGATION_ITEMS;
+  protected readonly collapsed = signal(false);
+
+  protected toggle(): void {
+    this.collapsed.update((collapsed) => !collapsed);
+  }
 }

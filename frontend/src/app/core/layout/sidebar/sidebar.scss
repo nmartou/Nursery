@@ -5,12 +5,50 @@
   color: var(--color-sidebar-text);
   padding: 1.5rem 1rem;
   box-sizing: border-box;
+  transition: width 0.2s ease;
+
+  &--collapsed {
+    width: var(--sidebar-collapsed-width);
+    padding-inline: 0.5rem;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding: 0 0.25rem 0 0.75rem;
+  }
+
+  &--collapsed &__header {
+    justify-content: center;
+    padding: 0;
+  }
 
   &__brand {
     font-size: 1.25rem;
     font-weight: 700;
-    margin-bottom: 2rem;
-    padding: 0 0.75rem;
+    white-space: nowrap;
+  }
+
+  &__toggle {
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: transparent;
+    color: inherit;
+    font-size: 1.125rem;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-sidebar-text);
+      outline-offset: 2px;
+    }
   }
 
   &__list {
@@ -27,6 +65,7 @@
     border-radius: 0.5rem;
     color: inherit;
     text-decoration: none;
+    white-space: nowrap;
 
     &:hover {
       background: rgba(255, 255, 255, 0.08);
@@ -36,5 +75,10 @@
       background: rgba(255, 255, 255, 0.16);
       font-weight: 600;
     }
+  }
+
+  &--collapsed &__link {
+    justify-content: center;
+    padding-inline: 0;
   }
 }
