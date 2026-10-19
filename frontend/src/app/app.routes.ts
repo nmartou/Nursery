@@ -11,7 +11,9 @@ export const routes: Routes = [
         path: 'accueil',
         title: 'Accueil · Nursery',
         loadComponent: () =>
-          import('./features/home/pages/home-page/home-page').then((m) => m.HomePage),
+          import('./features/dashboard/pages/dashboard-page/dashboard-page').then(
+            (m) => m.DashboardPage,
+          ),
       },
       {
         path: 'rapports',

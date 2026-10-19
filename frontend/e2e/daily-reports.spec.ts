@@ -64,9 +64,14 @@ test.describe('Rapports du jour', () => {
       await expect
         .poll(async () => (await reports.list.boundingBox())!.width)
         .toBeLessThan(listBefore.width);
-      const list = (await reports.list.boundingBox())!;
-      const form = (await reports.form.boundingBox())!;
-      expect(form.x).toBeGreaterThan(list.x + list.width - 1);
+      // The list and the form slide with a CSS transition: wait for the end position.
+      await expect
+        .poll(async () => {
+          const list = (await reports.list.boundingBox())!;
+          const form = (await reports.form.boundingBox())!;
+          return form.x - (list.x + list.width);
+        })
+        .toBeGreaterThan(-1);
     });
 
     test('pré-remplit le nom et les données déjà saisies', async () => {

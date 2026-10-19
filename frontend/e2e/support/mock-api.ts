@@ -159,6 +159,25 @@ export class MockApi {
       return this.json(route, 200, { date, reports });
     }
 
+    if (method === 'GET' && path === '/daily-reports/stats') {
+      const date = url.searchParams.get('date') ?? SEED_DATE;
+      if (!isWeekday(date)) {
+        return this.json(route, 400, { message: 'La crèche est fermée le week-end.' });
+      }
+      this.createReports(date);
+      const reports = this.reports.filter((r) => r.date === date);
+      const byStatus: Record<ReportStatus, number> = {
+        todo: 0,
+        in_progress: 0,
+        complete: 0,
+        absent: 0,
+      };
+      for (const r of reports) {
+        byStatus[r.status]++;
+      }
+      return this.json(route, 200, { date, total: reports.length, byStatus });
+    }
+
     const match = /^\/daily-reports\/([^/]+)$/.exec(path);
     const report = match && this.reports.find((r) => r.id === match[1]);
     if (match && !report) {

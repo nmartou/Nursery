@@ -40,7 +40,7 @@ npm run lint                       # ESLint (TS + templates HTML) puis Stylelint
 npm test                           # tests unitaires Vitest via @angular/build:unit-test
 npx ng test --include src/app/shared/utils/date.utils.spec.ts   # un seul fichier
 npm run test:ui                    # Playwright (lance `npm start`, API mockée)
-npx playwright test e2e/home.spec.ts
+npx playwright test e2e/dashboard.spec.ts
 ```
 
 Playwright nécessite `npx playwright install chromium` la première fois.
@@ -75,10 +75,12 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 
 - `src/app/core/` : mise en page (`MainLayout` + `Sidebar` rétractable), `ApiService` (enveloppe d'`HttpClient` qui préfixe les URL avec `environment.apiUrl`), constantes de navigation.
 - `src/app/features/<feature>/` : pages chargées à la demande (`loadComponent` dans `app.routes.ts`, routes en français : `/accueil`, `/rapports`), avec leurs composants, services, modèles et utilitaires.
+- **Tableau de bord** (`features/dashboard`, route `/accueil`) : une grille de tuiles autonomes. Chaque tuile est un composant bâti sur `DashboardTile` qui charge ses propres données, via une méthode de `DashboardService` appelant un endpoint du domaine concerné (ex. `GET /daily-reports/stats`). Le backend n'a pas de module « dashboard ». Comme une feature ne peut pas importer une autre feature, la tuile redéfinit les types et libellés dont elle a besoin.
 - `src/app/shared/` : utilitaires génériques (dates, URL).
 - **Ajouter une page** : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.
 - **État** : signals (`signal`, `computed`, `toSignal`) ; tous les composants sont en `ChangeDetectionStrategy.OnPush`. Les formulaires sont réactifs et typés (`NonNullableFormBuilder`).
 - **Tests UI** : les tests Playwright (`e2e/`) mockent l'API avec `e2e/support/mock-api.ts` et utilisent un page object (`e2e/pages/`).
+- **Responsive** : L'ensemble des éléments doivent être responsive pour être accessible via un smartphone
 
 ## Règles de lint propres au projet
 

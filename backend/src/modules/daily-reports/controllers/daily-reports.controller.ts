@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { DailyReportQueryDto } from '../dtos/daily-report-query.dto.js';
 import { DailyReportResponseDto } from '../dtos/daily-report-response.dto.js';
+import { DailyReportStatsResponseDto } from '../dtos/daily-report-stats.dto.js';
 import { DailyReportListResponseDto } from '../dtos/daily-report-summary.dto.js';
 import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import { DailyReportsService } from '../services/daily-reports.service.js';
@@ -22,6 +23,14 @@ export class DailyReportsController {
     @Query() query: DailyReportQueryDto,
   ): Promise<DailyReportListResponseDto> {
     return this.dailyReportsService.listForDate(query.date);
+  }
+
+  /** Declared before `:id` so that "stats" is not parsed as an id. */
+  @Get('stats')
+  stats(
+    @Query() query: DailyReportQueryDto,
+  ): Promise<DailyReportStatsResponseDto> {
+    return this.dailyReportsService.statsForDate(query.date);
   }
 
   @Get(':id')

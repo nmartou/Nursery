@@ -49,6 +49,20 @@ describe('DailyReportsService', () => {
     });
   });
 
+  it('counts the reports of the day by status', async () => {
+    repository.findByDate.mockResolvedValueOnce([
+      report,
+      { ...report, id: 'r2', absent: true },
+      { ...report, id: 'r3', arrivalTime: '08:00' },
+    ]);
+
+    await expect(service.statsForDate('2026-10-16')).resolves.toEqual({
+      date: '2026-10-16',
+      total: 3,
+      byStatus: { todo: 1, in_progress: 1, complete: 0, absent: 1 },
+    });
+  });
+
   it('refuses weekends without querying the database', async () => {
     await expect(service.listForDate('2026-10-17')).rejects.toBeInstanceOf(
       BadRequestException,

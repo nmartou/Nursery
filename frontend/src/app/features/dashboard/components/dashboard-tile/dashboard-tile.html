@@ -1,0 +1,16 @@
+<section class="tile" [attr.aria-labelledby]="titleId">
+  <header class="tile__header">
+    <h2 class="tile__title" [id]="titleId">{{ heading() }}</h2>
+    @if (subtitle(); as subtitle) {
+      <p class="tile__subtitle">{{ subtitle }}</p>
+    }
+  </header>
+
+  <div class="tile__body">
+    <ng-content />
+  </div>
+
+  <footer class="tile__footer">
+    <ng-content select="[tileFooter]" />
+  </footer>
+</section>

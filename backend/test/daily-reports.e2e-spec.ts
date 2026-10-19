@@ -118,6 +118,20 @@ describe('Daily reports API (e2e)', () => {
     ).toEqual(['Hugo', 'Chloé', 'Léa']);
   });
 
+  it('GET /api/daily-reports/stats counts the reports by status', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/api/daily-reports/stats?date=2026-10-16')
+      .expect(200);
+    expect(res.body).toEqual({
+      date: '2026-10-16',
+      total: 3,
+      byStatus: { todo: 2, in_progress: 0, complete: 1, absent: 0 },
+    });
+    await request(app.getHttpServer())
+      .get('/api/daily-reports/stats?date=2026-10-17')
+      .expect(400);
+  });
+
   it('GET /api/daily-reports rejects weekends and invalid dates', async () => {
     await request(app.getHttpServer())
       .get('/api/daily-reports?date=2026-10-17')

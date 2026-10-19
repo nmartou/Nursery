@@ -15,7 +15,7 @@ test.describe('Navigation', () => {
 
   test('ouvre la page des rapports depuis la barre latérale', async ({ page }) => {
     await page.goto('/accueil');
-    await page.getByRole('link', { name: 'Rapports du jour' }).click();
+    await page.getByRole('link', { name: 'Rapports du jour', exact: true }).click();
     await expect(page).toHaveURL(/\/rapports$/);
     await expect(page).toHaveTitle('Rapports du jour · Nursery');
     await expect(page.getByRole('heading', { name: 'Rapports du jour' })).toBeVisible();

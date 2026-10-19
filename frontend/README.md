@@ -65,10 +65,11 @@ src/app/
 │   ├── models/               # interfaces transverses
 │   └── services/             # services transverses (ApiService)
 ├── features/                 # un dossier par fonctionnalité, chargé en lazy-loading
-│   ├── home/
+│   ├── dashboard/            # tableau de bord (/accueil)
+│   │   ├── components/       # cadre commun des tuiles + une tuile par sujet
 │   │   ├── models/           # modèles de la fonctionnalité
-│   │   ├── pages/            # composants routés
-│   │   └── services/         # accès aux données de la fonctionnalité
+│   │   ├── pages/            # composants routés (grille de tuiles)
+│   │   └── services/         # accès aux données des tuiles
 │   └── daily-reports/        # rapports journaliers par enfant (/rapports)
 │       ├── components/       # liste, formulaire, badge de statut
 │       ├── constants/        # libellés des statuts
@@ -84,7 +85,8 @@ src/app/
 
 ## Pages
 
-- **Accueil** (`/accueil`) : page d'accueil, avec un accès aux rapports du jour.
+- **Tableau de bord** (`/accueil`) : une grille de tuiles indépendantes, qui chargent chacune leurs données. Pour l'instant, une seule tuile, « Rapports du jour » : nombre de rapports terminés (complets ou absents) sur le total, barre de progression, répartition par statut et lien vers les rapports.
+  - Pour ajouter une tuile : créer un composant dans `features/dashboard/components/` qui s'appuie sur `DashboardTile` (titre, sous-titre, contenu et `<div tileFooter>`), ajouter sa méthode dans `DashboardService` (un endpoint du domaine concerné), puis le placer dans la grille de `dashboard-page.html`.
 - **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.

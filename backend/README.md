@@ -66,11 +66,12 @@ Tables : `nursery`, `child`, `parent`, `child_parent` (enfants ↔ parents), `da
 
 ## Endpoints disponibles
 
-| Méthode | Route                     | Description                                                                                                         |
-| ------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| GET     | `/api/daily-reports?date` | Rapports d'un jour de semaine (créés automatiquement s'ils manquent) ; sans date, le jour de semaine le plus récent |
-| GET     | `/api/daily-reports/:id`  | Détail d'un rapport                                                                                                 |
-| PUT     | `/api/daily-reports/:id`  | Enregistrement d'un rapport (statut et heure de modification recalculés)                                            |
+| Méthode | Route                           | Description                                                                                                         |
+| ------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| GET     | `/api/daily-reports?date`       | Rapports d'un jour de semaine (créés automatiquement s'ils manquent) ; sans date, le jour de semaine le plus récent |
+| GET     | `/api/daily-reports/stats?date` | Nombre de rapports du jour, au total et par statut (tableau de bord) ; mêmes règles de date                         |
+| GET     | `/api/daily-reports/:id`        | Détail d'un rapport                                                                                                 |
+| PUT     | `/api/daily-reports/:id`        | Enregistrement d'un rapport (statut et heure de modification recalculés)                                            |
 
 Statut d'un rapport, calculé : `todo` (rien de saisi), `in_progress`, `complete` (arrivée, départ, repas ou biberon, sieste ou « pas de sieste »), `absent`.
 

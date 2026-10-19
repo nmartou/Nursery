@@ -8,9 +8,11 @@ import {
   mostRecentWeekday,
 } from '../../../common/utils/date.util.js';
 import { DailyReportResponseDto } from '../dtos/daily-report-response.dto.js';
+import { DailyReportStatsResponseDto } from '../dtos/daily-report-stats.dto.js';
 import { DailyReportListResponseDto } from '../dtos/daily-report-summary.dto.js';
 import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import { DailyReportMapper } from '../mappers/daily-report.mapper.js';
+import type { ReportStatus } from '../models/daily-report.model.js';
 import { DailyReportRepository } from '../repositories/daily-report.repository.js';
 
 @Injectable()
@@ -30,6 +32,21 @@ export class DailyReportsService {
       date,
       reports: reports.map((report) => DailyReportMapper.toSummaryDto(report)),
     };
+  }
+
+  /** Counts the reports of a weekday by status (missing reports are created first). */
+  async statsForDate(date?: string): Promise<DailyReportStatsResponseDto> {
+    const list = await this.listForDate(date);
+    const byStatus: Record<ReportStatus, number> = {
+      todo: 0,
+      in_progress: 0,
+      complete: 0,
+      absent: 0,
+    };
+    for (const report of list.reports) {
+      byStatus[report.status]++;
+    }
+    return { date: list.date, total: list.reports.length, byStatus };
   }
 
   async getById(id: string): Promise<DailyReportResponseDto> {
