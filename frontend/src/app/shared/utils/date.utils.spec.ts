@@ -1,4 +1,11 @@
-import { addWeekdays, currentTime, formatLongDate, isWeekday } from './date.utils';
+import {
+  addWeekdays,
+  currentTime,
+  formatAge,
+  formatLongDate,
+  formatShortDate,
+  isWeekday,
+} from './date.utils';
 
 describe('date utils', () => {
   it('detects weekdays', () => {
@@ -18,5 +25,17 @@ describe('date utils', () => {
 
   it('formats the current time as HH:mm', () => {
     expect(currentTime(new Date(2026, 9, 16, 9, 5))).toBe('09:05');
+  });
+
+  it('formats a short French date', () => {
+    expect(formatShortDate('2026-10-16')).toBe('16/10/2026');
+  });
+
+  it('gives the age in months before 2 years, then in years', () => {
+    expect(formatAge('2026-07-20', '2026-10-19')).toBe('2 mois');
+    expect(formatAge('2026-07-20', '2026-10-20')).toBe('3 mois');
+    expect(formatAge('2024-11-01', '2026-10-19')).toBe('23 mois');
+    expect(formatAge('2024-03-12', '2026-10-19')).toBe('2 ans');
+    expect(formatAge('2026-12-01', '2026-10-19')).toBe('à naître');
   });
 });

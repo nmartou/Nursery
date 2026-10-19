@@ -1,0 +1,84 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__empty {
+    padding: 1rem 0;
+    color: var(--color-text-muted);
+  }
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1.2fr) minmax(10rem, 1fr) auto minmax(14rem, 1.6fr);
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &__child,
+  &__parents {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    min-width: 0;
+  }
+
+  &__meta,
+  &__muted {
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &__period {
+    font-size: 0.875rem;
+  }
+
+  &__status {
+    justify-self: start;
+  }
+
+  &__parent {
+    font-size: 0.875rem;
+  }
+
+  // Angular drops the whitespace between elements: keep the separator apart.
+  &__phone {
+    margin-left: 0.25rem;
+  }
+
+  // Narrow screens: one block per child.
+  @media (width <= 900px) {
+    grid-template-columns: 1fr auto;
+
+    &__period,
+    &__parents {
+      grid-column: 1 / -1;
+    }
+
+    &__status {
+      grid-row: 1;
+      grid-column: 2;
+    }
+  }
+}

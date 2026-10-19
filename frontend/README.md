@@ -23,9 +23,11 @@ npx ng generate component ... # générer un élément Angular
 
 ### Tests UI (Playwright)
 
-Les tests de `e2e/` pilotent Chromium sur l'application et vérifient ce que voit l'utilisateur : navigation, barre latérale rétractable, liste des rapports et ses indicateurs, ouverture du formulaire à côté de la liste, saisie, enregistrement, bouton Absent, validation des selles, confirmation avant de perdre des modifications, choix du jour, affichage sur petit écran.
+Les tests de `e2e/` pilotent Chromium sur l'application et vérifient ce que voit l'utilisateur : navigation, barre latérale rétractable, inscriptions (filtres, recherche, formulaire modal, validation, ajout et modification, effet sur les rapports du jour), liste des rapports et ses indicateurs, ouverture du formulaire à côté de la liste, saisie, enregistrement, bouton Absent, validation des selles, confirmation avant de perdre des modifications, choix du jour, affichage sur petit écran.
 
 L'API est **simulée** (`e2e/support/mock-api.ts`) : pas besoin du backend, et les données sont identiques à chaque exécution. Le serveur de dev Angular est démarré automatiquement, ou réutilisé s'il tourne déjà.
+
+Attention : tout serveur qui répond sur le port 4200 est réutilisé, y compris le conteneur Docker du frontend (ancienne version). Dans ce cas, lancer les tests sur un autre port : `E2E_PORT=4201 npm run test:ui`.
 
 ```bash
 npx playwright install chromium   # une seule fois : télécharger le navigateur
@@ -70,6 +72,14 @@ src/app/
 │   │   ├── models/           # modèles de la fonctionnalité
 │   │   ├── pages/            # composants routés (grille de tuiles)
 │   │   └── services/         # accès aux données des tuiles
+│   ├── children/             # inscriptions des enfants (/inscriptions)
+│   │   ├── components/       # liste, formulaire (dans une modale), badge d'inscription
+│   │   ├── constants/        # libellés (liens de parenté, statuts), règles de saisie
+│   │   ├── models/
+│   │   ├── pages/            # page : filtres, recherche, liste + <dialog> modal
+│   │   ├── services/
+│   │   ├── testing/          # données de test partagées entre les specs
+│   │   └── utils/            # conversion formulaire <-> payload API, validateurs
 │   └── daily-reports/        # rapports journaliers par enfant (/rapports)
 │       ├── components/       # liste, formulaire, badge de statut
 │       ├── constants/        # libellés des statuts
@@ -87,6 +97,14 @@ src/app/
 
 - **Tableau de bord** (`/accueil`) : une grille de tuiles indépendantes, qui chargent chacune leurs données. Pour l'instant, une seule tuile, « Rapports du jour » : nombre de rapports terminés (complets ou absents) sur le total, barre de progression, répartition par statut et lien vers les rapports.
   - Pour ajouter une tuile : créer un composant dans `features/dashboard/components/` qui s'appuie sur `DashboardTile` (titre, sous-titre, contenu et `<div tileFooter>`), ajouter sa méthode dans `DashboardService` (un endpoint du domaine concerné), puis le placer dans la grille de `dashboard-page.html`.
+- **Inscriptions** (`/inscriptions`) : la liste des enfants (âge, période d'inscription, statut « Inscrit / À venir / Terminé », parents et nombre d'autres contacts), avec des filtres par statut et une recherche par nom (sans tenir compte des accents). « Inscrire un enfant », ou un clic sur une ligne, ouvre le formulaire dans une modale (`<dialog>`) : la page derrière est assombrie, floutée et inactive. Le formulaire se ferme avec Échap, Annuler ou un clic sur le fond, avec une confirmation s'il contient des modifications. Il comprend :
+  - l'enfant (prénom, nom, date de naissance) ;
+  - la période d'inscription (premier jour obligatoire, dernier jour facultatif) ;
+  - les parents responsables (1 à 4 : lien, nom, e-mail, téléphone) ;
+  - les autres contacts à appeler (nom, lien, téléphone).
+
+  Un enfant n'apparaît dans les rapports du jour que pendant sa période d'inscription.
+
 - **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.

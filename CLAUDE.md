@@ -41,15 +41,16 @@ npm test                           # tests unitaires Vitest via @angular/build:u
 npx ng test --include src/app/shared/utils/date.utils.spec.ts   # un seul fichier
 npm run test:ui                    # Playwright (lance `npm start`, API mockée)
 npx playwright test e2e/dashboard.spec.ts
+E2E_PORT=4201 npm run test:ui      # quand le port 4200 est déjà pris (ex. stack Docker)
 ```
 
-Playwright nécessite `npx playwright install chromium` la première fois.
+Playwright nécessite `npx playwright install chromium` la première fois. Il **réutilise tout serveur qui répond déjà sur son port** : si la stack Docker tourne, ce serait l'ancien frontend du conteneur. Dans ce cas, passer par `E2E_PORT`.
 
 Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, `frontend`). `docker compose up --build [backend|frontend]` lance les conteneurs. La stack Docker est autonome : service `db` (PostgreSQL 18, volume `pgdata`, port 5433 sur la machine), service ponctuel `migrate` (`node database/db.js migrate`) dont dépend `backend`, et identifiants dans un `.env` optionnel à la racine (`.env.example`). Elle est indépendante de `backend/.env`, qui sert au développement local sur le PostgreSQL de la machine. L'image backend est en `TZ=Europe/Paris` : le « jour courant » des rapports dépend du fuseau horaire.
 
 ## Architecture backend
 
-- **Modules métier** dans `src/modules/<domaine>/` (aujourd'hui seulement `daily-reports`). Chaque module est découpé en couches : `controllers → services → repositories`, avec `dtos/`, `mappers/` (DTO ↔ modèle), `models/` (modèles du domaine, indépendants de la base) et `testing/` (constantes partagées entre les specs).
+- **Modules métier** dans `src/modules/<domaine>/` (`children` pour les inscriptions, `daily-reports`). Chaque module est découpé en couches : `controllers → services → repositories`, avec `dtos/`, `mappers/` (DTO ↔ modèle), `models/` (modèles du domaine, indépendants de la base) et `testing/` (constantes partagées entre les specs).
 - **Repositories** : ce sont des classes `@Injectable()` qui reçoivent le client Drizzle (`@Inject(DRIZZLE) db: Database`) et convertissent les lignes en modèles du domaine. Les services injectent la classe directement : il n'y a ni interface, ni token, ni implémentation en mémoire.
 - **Base de données** (`src/common/database/`) :
   - `schema.ts` est la source de vérité unique : tables, contraintes, index et `relations()` utilisées par l'API relationnelle (`db.query.<table>.findMany({ with })`). Les colonnes sont nommées en snake_case explicite, les propriétés en camelCase.
@@ -66,7 +67,11 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
   - un seul rapport par enfant et par jour (`UNIQUE (child_id, report_date)`) ;
   - jours de semaine uniquement (`CHECK ISODOW < 6`) ;
   - commentaire obligatoire si les selles ne sont pas « normales ».
-- **Création automatique des rapports** : `GET /daily-reports?date=` crée les rapports manquants du jour pour chaque enfant actif (`ensureReportsForDate` : lecture des enfants actifs puis `INSERT ... ON CONFLICT DO NOTHING` ; l'`insert().select()` de Drizzle exige toutes les colonnes de la table, il n'est donc pas utilisé).
+- **Inscriptions** : un enfant est inscrit de `enrollment_start` à `enrollment_end` inclus (`null` = fin pas encore connue). La condition SQL `isEnrolledOn(date)` (`common/database/enrollment.ts`) décide seule qui a un rapport un jour donné. C'est là que se branchera le futur calendrier des fermetures (jours fériés, congés de la crèche). Le statut d'inscription (`upcoming`, `enrolled`, `ended`) est calculé par rapport à aujourd'hui (`modules/children/utils/enrollment-status.util.ts`).
+- **Parents** : un parent est identifié par son e-mail en minuscules, et sa fiche est partagée entre frères et sœurs (`INSERT ... ON CONFLICT (email) DO UPDATE`). Un parent qui n'est plus lié à aucun enfant est supprimé. Les autres personnes à appeler sont dans `child_contact`, propres à chaque enfant.
+- **Création automatique des rapports** : `GET /daily-reports?date=` crée les rapports manquants du jour pour chaque enfant inscrit ce jour-là (`ensureReportsForDate` : lecture des enfants puis `INSERT ... ON CONFLICT DO NOTHING` ; l'`insert().select()` de Drizzle exige toutes les colonnes de la table, il n'est donc pas utilisé). `findByDate` ne liste que les rapports des enfants inscrits ce jour-là : si une inscription est raccourcie, les rapports au-delà restent en base mais disparaissent.
+- **Migrations sur une table qui a déjà des données** : quand on ajoute une colonne obligatoire, il faut compléter à la main la migration générée (voir `0001_child_enrollment_and_contacts.sql`). drizzle-kit pose une question interactive (renommage ou remplacement ?) quand une colonne disparaît et qu'une autre apparaît dans la même table, et cette question échoue hors d'un terminal : on découpe alors le changement en deux migrations.
+- **Validation des DTO** : `@Trim()` (`common/validation/`) nettoie les textes avant validation, et `@IsOnOrAfter('autreChamp')` compare deux dates d'un même DTO.
 - **Statut d'un rapport** : il n'est pas stocké, il est recalculé (`modules/daily-reports/utils/report-status.util.ts`) et vaut `todo`, `in_progress`, `complete` ou `absent`.
 - **Dates et heures** : les dates circulent en chaînes `YYYY-MM-DD` (`date({ mode: 'string' })`). Les heures sont en `HH:mm` dans l'API, mais PostgreSQL renvoie `HH:mm:ss` : les repositories passent par `toHourMinute()`.
 - **Identifiants** : ce sont des UUID, validés par `ParseUUIDPipe` dans les routes (un id invalide renvoie 400, pas 500).
@@ -74,7 +79,8 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 ## Architecture frontend
 
 - `src/app/core/` : mise en page (`MainLayout` + `Sidebar` rétractable), `ApiService` (enveloppe d'`HttpClient` qui préfixe les URL avec `environment.apiUrl`), constantes de navigation.
-- `src/app/features/<feature>/` : pages chargées à la demande (`loadComponent` dans `app.routes.ts`, routes en français : `/accueil`, `/rapports`), avec leurs composants, services, modèles et utilitaires.
+- `src/app/features/<feature>/` : pages chargées à la demande (`loadComponent` dans `app.routes.ts`, routes en français : `/accueil`, `/inscriptions`, `/rapports`), avec leurs composants, services, modèles et utilitaires.
+- **Formulaires en modale** (`features/children`) : un `<dialog>` natif ouvert avec `showModal()`. Son fond (`::backdrop`, variables `--color-backdrop` et `--backdrop-blur`) assombrit et floute la page, qui devient inactive. L'ouverture suit un signal (`editing`) via `afterRenderEffect`, qui place aussi le focus sur le premier champ (l'attribut `autofocus` est interdit par le lint). La fermeture passe par Échap (événement `cancel`), Annuler ou un clic sur le fond, avec confirmation si le formulaire est modifié. jsdom n'implémente pas `showModal()` : les specs utilisent un remplacement minimal, et le comportement réel est testé avec Playwright.
 - **Tableau de bord** (`features/dashboard`, route `/accueil`) : une grille de tuiles autonomes. Chaque tuile est un composant bâti sur `DashboardTile` qui charge ses propres données, via une méthode de `DashboardService` appelant un endpoint du domaine concerné (ex. `GET /daily-reports/stats`). Le backend n'a pas de module « dashboard ». Comme une feature ne peut pas importer une autre feature, la tuile redéfinit les types et libellés dont elle a besoin.
 - `src/app/shared/` : utilitaires génériques (dates, URL).
 - **Ajouter une page** : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.

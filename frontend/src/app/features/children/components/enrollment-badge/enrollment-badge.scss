@@ -1,0 +1,29 @@
+.badge {
+  --badge-color: var(--enrollment-enrolled);
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--badge-color);
+  background: color-mix(in srgb, var(--badge-color) 12%, transparent);
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--badge-color);
+  }
+
+  &--upcoming {
+    --badge-color: var(--enrollment-upcoming);
+  }
+
+  &--ended {
+    --badge-color: var(--enrollment-ended);
+  }
+}

@@ -46,3 +46,30 @@ export function formatTime(isoDateTime: string): string {
 export function currentTime(now: Date = new Date()): string {
   return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
+
+/** e.g. "16/10/2026" */
+export function formatShortDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+}
+
+/** Whole months between two `YYYY-MM-DD` dates (0 if `to` is before `from`). */
+function monthsBetween(from: string, to: string): number {
+  const [fromYear, fromMonth, fromDay] = from.split('-').map(Number);
+  const [toYear, toMonth, toDay] = to.split('-').map(Number);
+  const months = (toYear - fromYear) * 12 + (toMonth - fromMonth) - (toDay < fromDay ? 1 : 0);
+  return Math.max(months, 0);
+}
+
+/** Age of a young child on `today`: "3 mois", "18 mois", "2 ans"… */
+export function formatAge(birthDate: string, today: string): string {
+  if (today < birthDate) {
+    return 'à naître';
+  }
+  const months = monthsBetween(birthDate, today);
+  if (months < 24) {
+    return `${months} mois`;
+  }
+  const years = Math.floor(months / 12);
+  return `${years} ans`;
+}

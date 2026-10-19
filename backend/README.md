@@ -60,22 +60,32 @@ npm run db:studio      # explorer la base avec Drizzle Studio
 ```
 
 - **Schéma** : `src/common/database/schema.ts` décrit les tables, les contraintes et les relations. C'est la source de vérité.
-- **Migrations** : après une modification du schéma, `npm run db:generate` produit une migration SQL dans `database/migrations/` (à relire puis commiter avec son dossier `meta/`), et `npm run db:migrate` l'applique. On ne modifie jamais une migration déjà appliquée.
+- **Migrations** : après une modification du schéma, `npm run db:generate` produit une migration SQL dans `database/migrations/` (à relire puis commiter avec son dossier `meta/`), et `npm run db:migrate` l'applique. On ne modifie jamais une migration déjà appliquée. Deux points d'attention :
+  - quand une colonne est ajoutée à une table qui contient déjà des données, il faut compléter la migration générée à la main (exemple : `0001_child_enrollment_and_contacts.sql` remplit `enrollment_start` à partir des rapports existants avant de la rendre obligatoire) ;
+  - drizzle-kit pose une question interactive quand une colonne disparaît et qu'une autre apparaît dans la même table (renommage ou remplacement ?), et cette question échoue hors d'un vrai terminal. On peut alors découper le changement en deux migrations (ajout, puis suppression), comme `0001` puis `0002`.
 - **Avec Docker** : `docker compose` lance sa propre base PostgreSQL (service `db`, port 5433 sur la machine) et un service `migrate` qui applique les migrations avant le démarrage de l'API. Il n'utilise pas `backend/.env` (voir le README racine). L'image est réglée sur le fuseau `Europe/Paris` (`TZ`), pour que le « jour courant » des rapports soit celui de la crèche et non l'UTC ; on peut le changer en passant `TZ` au conteneur.
 - **Tests e2e** : ils utilisent une base dédiée (`<DB_NAME>_test`), créée et migrée automatiquement. L'utilisateur PostgreSQL doit avoir le droit `CREATEDB` ; sinon, crée cette base à la main une fois.
 
-Tables : `nursery`, `child`, `parent`, `child_parent` (enfants ↔ parents), `daily_report` (un rapport par enfant et par jour de semaine), `report_meal`, `report_bottle`, `report_nap`.
+Tables : `nursery`, `child` (avec sa période d'inscription), `parent`, `child_parent` (enfants ↔ parents, avec le lien et l'ordre), `child_contact` (autres personnes à appeler), `daily_report` (un rapport par enfant et par jour de semaine), `report_meal`, `report_bottle`, `report_nap`.
 
 ## Endpoints disponibles
 
 | Méthode | Route                           | Description                                                                                                         |
 | ------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| GET     | `/api/children`                 | Tous les enfants inscrits (passés, présents, à venir), avec leur statut d'inscription du jour et leurs parents      |
+| GET     | `/api/children/:id`             | Détail d'un enfant : période d'inscription, parents responsables, autres contacts                                   |
+| POST    | `/api/children`                 | Inscription d'un enfant (au moins un parent ; fin ≥ début ≥ naissance ; e-mails des parents distincts)              |
+| PUT     | `/api/children/:id`             | Modification complète d'une inscription (parents et contacts remplacés)                                             |
 | GET     | `/api/daily-reports?date`       | Rapports d'un jour de semaine (créés automatiquement s'ils manquent) ; sans date, le jour de semaine le plus récent |
 | GET     | `/api/daily-reports/stats?date` | Nombre de rapports du jour, au total et par statut (tableau de bord) ; mêmes règles de date                         |
 | GET     | `/api/daily-reports/:id`        | Détail d'un rapport                                                                                                 |
 | PUT     | `/api/daily-reports/:id`        | Enregistrement d'un rapport (statut et heure de modification recalculés)                                            |
 
 Statut d'un rapport, calculé : `todo` (rien de saisi), `in_progress`, `complete` (arrivée, départ, repas ou biberon, sieste ou « pas de sieste »), `absent`.
+
+**Inscriptions et rapports** : un enfant est inscrit du `enrollment_start` au `enrollment_end` inclus (fin vide = pas encore connue). Il n'a de rapport, et n'apparaît dans les rapports et les statistiques d'un jour, que s'il est inscrit ce jour-là. Si la fin d'inscription est avancée, les rapports déjà créés au-delà restent en base mais ne sont plus listés. Statut d'inscription, calculé par rapport à aujourd'hui : `upcoming`, `enrolled`, `ended`. Le futur calendrier des fermetures (jours fériés, congés de la crèche) viendra compléter cette règle dans `common/database/enrollment.ts`.
+
+**Parents** : un parent est identifié par son e-mail (stocké en minuscules). Les frères et sœurs partagent donc la même fiche parent, et les coordonnées saisies pour l'un sont mises à jour pour tous. Un parent qui n'est plus lié à aucun enfant est supprimé.
 
 ## Architecture
 

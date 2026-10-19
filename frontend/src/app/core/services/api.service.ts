@@ -18,6 +18,10 @@ export class ApiService {
     return this.http.get<T>(buildUrl(environment.apiUrl, path), { params });
   }
 
+  post<T>(path: string, body: unknown): Observable<T> {
+    return this.http.post<T>(buildUrl(environment.apiUrl, path), body);
+  }
+
   put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(buildUrl(environment.apiUrl, path), body);
   }

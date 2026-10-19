@@ -19,6 +19,14 @@
   --status-in-progress: #e08a1e;
   --status-complete: #2e9d5b;
   --status-absent: #8a91a3;
+
+  --enrollment-enrolled: #2e9d5b;
+  --enrollment-upcoming: #3b6fd6;
+  --enrollment-ended: #8a91a3;
+
+  /* Behind modal dialogs: the page is dimmed and blurred. */
+  --color-backdrop: rgb(20 26 45 / 45%);
+  --backdrop-blur: 3px;
 }
 
 button,

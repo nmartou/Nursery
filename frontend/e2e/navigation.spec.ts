@@ -13,6 +13,18 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('link', { name: 'Accueil' })).toHaveClass(/sidebar__link--active/);
   });
 
+  test('place les inscriptions juste avant les rapports du jour', async ({ page }) => {
+    await page.goto('/accueil');
+    await expect(page.locator('.sidebar__link')).toHaveText([
+      /Accueil/,
+      /Inscriptions/,
+      /Rapports du jour/,
+    ]);
+    await page.getByRole('link', { name: 'Inscriptions' }).click();
+    await expect(page).toHaveURL(/\/inscriptions$/);
+    await expect(page).toHaveTitle('Inscriptions · Nursery');
+  });
+
   test('ouvre la page des rapports depuis la barre latérale', async ({ page }) => {
     await page.goto('/accueil');
     await page.getByRole('link', { name: 'Rapports du jour', exact: true }).click();

@@ -1,0 +1,51 @@
+<ul class="list" aria-label="Enfants inscrits">
+  @for (child of children(); track child.id) {
+    <li>
+      <button
+        type="button"
+        class="row"
+        [attr.aria-label]="'Modifier l\'inscription de ' + child.firstName + ' ' + child.lastName"
+        (click)="selectChild.emit(child.id)"
+      >
+        <span class="row__child">
+          <span class="row__name">
+            <strong>{{ child.firstName }}</strong> {{ child.lastName }}
+          </span>
+          <span class="row__meta">
+            {{ formatAge(child.birthDate, today()) }} · né(e) le
+            {{ formatShortDate(child.birthDate) }}
+          </span>
+        </span>
+
+        <span class="row__period">
+          @if (child.enrollmentEnd; as end) {
+            Du {{ formatShortDate(child.enrollmentStart) }} au {{ formatShortDate(end) }}
+          } @else {
+            Depuis le {{ formatShortDate(child.enrollmentStart) }}
+          }
+        </span>
+
+        <app-enrollment-badge class="row__status" [status]="child.enrollmentStatus" />
+
+        <span class="row__parents">
+          @for (parent of child.parents; track $index) {
+            <span class="row__parent">
+              {{ parent.firstName }} {{ parent.lastName }}
+              <span class="row__muted">({{ relationshipLabels[parent.relationship] }})</span>
+              @if (parent.phone) {
+                <span class="row__muted row__phone">· {{ parent.phone }}</span>
+              }
+            </span>
+          }
+          @if (child.contactCount > 0) {
+            <span class="row__muted">
+              + {{ child.contactCount }} contact{{ child.contactCount > 1 ? 's' : '' }}
+            </span>
+          }
+        </span>
+      </button>
+    </li>
+  } @empty {
+    <li class="list__empty">Aucun enfant ne correspond.</li>
+  }
+</ul>

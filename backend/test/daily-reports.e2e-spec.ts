@@ -1,11 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { Test, type TestingModule } from '@nestjs/testing';
-import { sql } from 'drizzle-orm';
 import request from 'supertest';
-import { AppModule } from '../src/app.module.js';
-import { setupApp } from '../src/app.setup.js';
-import { DRIZZLE } from '../src/common/constants/injection-tokens.js';
 import type { Database } from '../src/common/database/database.module.js';
 import {
   child,
@@ -13,8 +7,8 @@ import {
   nursery,
   reportMeal,
 } from '../src/common/database/schema.js';
-import type { AppConfig } from '../src/config/app.config.js';
 import { EMPTY_REPORT_CONTENT } from '../src/modules/daily-reports/testing/daily-report.fixtures.js';
+import { createTestApp } from './support/test-app.js';
 
 interface Summary {
   id: string;
@@ -23,30 +17,33 @@ interface Summary {
   updatedAt: string;
 }
 
-/** Resets the test database to a known state: one nursery, three children. */
-async function resetData(db: Database): Promise<void> {
-  await db.execute(sql`TRUNCATE nursery, parent CASCADE`);
+/**
+ * One nursery, three children enrolled since September, one whose enrollment
+ * ended in July, one starting in November and one leaving on Friday 16th.
+ */
+async function seedData(db: Database): Promise<void> {
   const [{ id: nurseryId }] = await db
     .insert(nursery)
     .values({ name: 'Crèche de test', address: '1 rue du Test', capacity: 10 })
     .returning({ id: nursery.id });
+  const enrolled = { nurseryId, enrollmentStart: '2026-09-01' };
   const children = await db
     .insert(child)
     .values([
       {
-        nurseryId,
+        ...enrolled,
         firstName: 'Léa',
         lastName: 'Martin',
         birthDate: '2024-03-12',
       },
       {
-        nurseryId,
+        ...enrolled,
         firstName: 'Chloé',
         lastName: 'Dubois',
         birthDate: '2024-07-22',
       },
       {
-        nurseryId,
+        ...enrolled,
         firstName: 'Hugo',
         lastName: 'Bernard',
         birthDate: '2025-01-08',
@@ -56,7 +53,23 @@ async function resetData(db: Database): Promise<void> {
         firstName: 'Ancien',
         lastName: 'Inscrit',
         birthDate: '2022-01-01',
-        active: false,
+        enrollmentStart: '2023-09-01',
+        enrollmentEnd: '2026-07-31',
+      },
+      {
+        nurseryId,
+        firstName: 'Futur',
+        lastName: 'Inscrit',
+        birthDate: '2026-03-01',
+        enrollmentStart: '2026-11-02',
+      },
+      {
+        nurseryId,
+        firstName: 'Zoé',
+        lastName: 'Partante',
+        birthDate: '2023-05-05',
+        enrollmentStart: '2024-09-02',
+        enrollmentEnd: '2026-10-16',
       },
     ])
     .returning({ id: child.id, firstName: child.firstName });
@@ -83,14 +96,9 @@ describe('Daily reports API (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-    setupApp(app, app.get(ConfigService).getOrThrow<AppConfig>('app'));
-    await app.init();
-    await resetData(app.get<Database>(DRIZZLE));
+    const testApp = await createTestApp();
+    app = testApp.app;
+    await seedData(testApp.db);
   });
 
   afterEach(async () => {
@@ -112,10 +120,10 @@ describe('Daily reports API (e2e)', () => {
       .get('/api/daily-reports?date=2026-10-16')
       .expect(200);
     expect(res.body.date).toBe('2026-10-16');
-    // Active children only, sorted by last name.
+    // Children enrolled that day only, sorted by last name.
     expect(
       (res.body.reports as Summary[]).map((report) => report.childFirstName),
-    ).toEqual(['Hugo', 'Chloé', 'Léa']);
+    ).toEqual(['Hugo', 'Chloé', 'Léa', 'Zoé']);
   });
 
   it('GET /api/daily-reports/stats counts the reports by status', async () => {
@@ -124,8 +132,8 @@ describe('Daily reports API (e2e)', () => {
       .expect(200);
     expect(res.body).toEqual({
       date: '2026-10-16',
-      total: 3,
-      byStatus: { todo: 2, in_progress: 0, complete: 1, absent: 0 },
+      total: 4,
+      byStatus: { todo: 3, in_progress: 0, complete: 1, absent: 0 },
     });
     await request(app.getHttpServer())
       .get('/api/daily-reports/stats?date=2026-10-17')
@@ -210,5 +218,26 @@ describe('Daily reports API (e2e)', () => {
       bottles: [{ time: '09:30', quantityMl: 210 }],
       naps: [{ startTime: '12:30', endTime: null }],
     });
+  });
+
+  it('GET /api/daily-reports only includes children enrolled on that day', async () => {
+    const names = async (date: string) => {
+      const res = await request(app.getHttpServer())
+        .get('/api/daily-reports')
+        .query({ date })
+        .expect(200);
+      return (res.body.reports as Summary[]).map((r) => r.childFirstName);
+    };
+    // Zoé leaves on Friday 16th (inclusive): gone on Monday 19th.
+    expect(await names('2026-10-19')).toEqual(['Hugo', 'Chloé', 'Léa']);
+    // Futur starts on Monday 2 November.
+    expect(await names('2026-11-02')).toEqual([
+      'Hugo',
+      'Chloé',
+      'Futur',
+      'Léa',
+    ]);
+    // Before September, only the former child was enrolled.
+    expect(await names('2026-06-15')).toEqual(['Ancien', 'Zoé']);
   });
 });

@@ -35,7 +35,7 @@ async function seed(client) {
   // The tables must exist: works on a brand-new database too.
   await migrate(client);
   const { rows } = await client.query(
-    'SELECT count(*)::int AS count FROM nursery',
+    'SELECT count(*)::int AS count FROM child',
   );
   if (rows[0].count > 0) {
     console.log('La base contient déjà des données : seed ignoré.');

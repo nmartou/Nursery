@@ -46,10 +46,27 @@ export const child = pgTable(
     firstName: varchar('first_name', { length: 100 }).notNull(),
     lastName: varchar('last_name', { length: 100 }).notNull(),
     birthDate: date('birth_date', { mode: 'string' }).notNull(),
-    active: boolean('active').notNull().default(true),
+    /** First day the child is enrolled (attends the nursery). */
+    enrollmentStart: date('enrollment_start', { mode: 'string' }).notNull(),
+    /** Last day the child is enrolled; null while the end is not known. */
+    enrollmentEnd: date('enrollment_end', { mode: 'string' }),
     createdAt: createdAt(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
   },
-  (t) => [index('idx_child_nursery').on(t.nurseryId)],
+  (t) => [
+    index('idx_child_nursery').on(t.nurseryId),
+    index('idx_child_enrollment').on(t.enrollmentStart, t.enrollmentEnd),
+    check(
+      'ck_child_enrollment_after_birth',
+      sql`${t.enrollmentStart} >= ${t.birthDate}`,
+    ),
+    check(
+      'ck_child_enrollment_period',
+      sql`${t.enrollmentEnd} is null or ${t.enrollmentEnd} >= ${t.enrollmentStart}`,
+    ),
+  ],
 );
 
 export const parent = pgTable('parent', {
@@ -75,8 +92,31 @@ export const childParent = pgTable(
     relationship: varchar('relationship', { length: 30 })
       .notNull()
       .default('parent'),
+    /** Display order of the parents of a child (0 = first contact). */
+    position: smallint('position').notNull().default(0),
   },
-  (t) => [primaryKey({ columns: [t.childId, t.parentId] })],
+  (t) => [
+    primaryKey({ columns: [t.childId, t.parentId] }),
+    index('idx_child_parent_parent').on(t.parentId),
+  ],
+);
+
+/** Additional people to call (grandparents, neighbours...), per child. */
+export const childContact = pgTable(
+  'child_contact',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    childId: uuid('child_id')
+      .notNull()
+      .references(() => child.id, { onDelete: 'cascade' }),
+    position: smallint('position').notNull().default(0),
+    firstName: varchar('first_name', { length: 100 }).notNull(),
+    lastName: varchar('last_name', { length: 100 }).notNull(),
+    /** Free text: grandmother, neighbour, nanny... */
+    relationship: varchar('relationship', { length: 50 }).notNull(),
+    phone: varchar('phone', { length: 30 }).notNull(),
+  },
+  (t) => [index('idx_child_contact_child').on(t.childId)],
 );
 
 // ---------------------------------------------------------------------------
@@ -191,6 +231,24 @@ export const childRelations = relations(child, ({ one, many }) => ({
     references: [nursery.id],
   }),
   reports: many(dailyReport),
+  parents: many(childParent),
+  contacts: many(childContact),
+}));
+
+export const parentRelations = relations(parent, ({ many }) => ({
+  children: many(childParent),
+}));
+
+export const childParentRelations = relations(childParent, ({ one }) => ({
+  child: one(child, { fields: [childParent.childId], references: [child.id] }),
+  parent: one(parent, {
+    fields: [childParent.parentId],
+    references: [parent.id],
+  }),
+}));
+
+export const childContactRelations = relations(childContact, ({ one }) => ({
+  child: one(child, { fields: [childContact.childId], references: [child.id] }),
 }));
 
 export const dailyReportRelations = relations(dailyReport, ({ one, many }) => ({

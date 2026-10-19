@@ -16,6 +16,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'inscriptions',
+        title: 'Inscriptions · Nursery',
+        loadComponent: () =>
+          import('./features/children/pages/children-page/children-page').then(
+            (m) => m.ChildrenPage,
+          ),
+      },
+      {
         path: 'rapports',
         title: 'Rapports du jour · Nursery',
         loadComponent: () =>

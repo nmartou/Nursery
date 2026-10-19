@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../../common/constants/injection-tokens.js';
 import type { Database } from '../../../common/database/database.module.js';
+import { isEnrolledOn } from '../../../common/database/enrollment.js';
 import {
   child,
   dailyReport,
@@ -44,12 +45,12 @@ type ReportWithDetails = typeof dailyReport.$inferSelect & {
 export class DailyReportRepository {
   constructor(@Inject(DRIZZLE) private readonly db: Database) {}
 
-  /** Creates an empty report for every active child that has none on that date. */
+  /** Creates an empty report for every child enrolled on that date that has none. */
   async ensureReportsForDate(date: string): Promise<void> {
     const children = await this.db
       .select({ id: child.id })
       .from(child)
-      .where(eq(child.active, true));
+      .where(isEnrolledOn(date));
     if (children.length === 0) {
       return;
     }
@@ -60,10 +61,23 @@ export class DailyReportRepository {
       .onConflictDoNothing();
   }
 
-  /** Reports of the day, sorted by child last name then first name. */
+  /**
+   * Reports of the day of the children enrolled that day, sorted by last name
+   * then first name. Reports outside an enrollment period (e.g. after the end
+   * date was moved earlier) are kept in the database but not listed.
+   */
   async findByDate(date: string): Promise<DailyReport[]> {
     const reports = await this.db.query.dailyReport.findMany({
-      where: eq(dailyReport.reportDate, date),
+      where: and(
+        eq(dailyReport.reportDate, date),
+        inArray(
+          dailyReport.childId,
+          this.db
+            .select({ id: child.id })
+            .from(child)
+            .where(isEnrolledOn(date)),
+        ),
+      ),
       with: WITH_DETAILS,
     });
     return reports
