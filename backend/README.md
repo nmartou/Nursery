@@ -54,7 +54,7 @@ L'application utilise **PostgreSQL** (13 ou plus) avec l'ORM **[Drizzle](https:/
 ```bash
 cp .env.example .env   # puis renseigner DB_USER, DB_PASSWORD, DB_NAME
 npm run db:migrate     # applique les migrations en attente
-npm run db:seed        # données d'exemple (vendredi 16/10/2026), seulement si la base est vide
+npm run db:seed        # migrations en attente puis données d'exemple (vendredi 16/10/2026), seulement si la base est vide
 npm run start:dev
 npm run db:studio      # explorer la base avec Drizzle Studio
 ```

@@ -38,7 +38,7 @@ docker compose up --build frontend   # frontend seul           -> http://localho
 | `frontend` | Application Angular servie par nginx                                              |
 
 - **Identifiants** : `nursery` / `nursery` par défaut. Pour les changer, copier `.env.example` en `.env` à la racine. Ils sont indépendants de `backend/.env`, qui sert au développement local avec un PostgreSQL installé sur la machine.
-- **Données d'exemple** : `docker compose run --rm migrate node database/db.js seed`.
+- **Données d'exemple** : `docker compose run --rm migrate node database/db.js seed` (applique d'abord les migrations si besoin, et ne fait rien si la base contient déjà des données).
 - **Repartir d'une base vide** : `docker compose down -v` (supprime le volume `pgdata`).
 
 ## Sécurité : à venir

@@ -27,7 +27,7 @@ npx vitest run -t "nom du test"    # un test par son nom
 npm run test:e2e                   # tests HTTP (test/*.e2e-spec.ts) sur la base <DB_NAME>_test
 npm run db:generate                # génère une migration depuis le schéma Drizzle
 npm run db:migrate                 # applique les migrations en attente (lit .env)
-npm run db:seed                    # données d'exemple, seulement si la base est vide
+npm run db:seed                    # migrations en attente puis données d'exemple, seulement si la base est vide
 npm run db:studio                  # Drizzle Studio, explorateur de la base
 ```
 

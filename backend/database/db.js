@@ -1,6 +1,7 @@
 // Database tooling, run through npm scripts so `.env` is loaded:
 //   npm run db:migrate   applies the pending migrations of database/migrations/
-//   npm run db:seed      loads database/seed.sql into an empty database
+//   npm run db:seed      applies the pending migrations, then loads
+//                        database/seed.sql into an empty database
 // Migrations are generated from src/common/database/schema.ts by `npm run db:generate`.
 // This script only depends on drizzle-orm and pg, so it also runs in the
 // production image (where drizzle-kit, a dev dependency, is not installed).
@@ -31,6 +32,8 @@ async function migrate(client) {
 }
 
 async function seed(client) {
+  // The tables must exist: works on a brand-new database too.
+  await migrate(client);
   const { rows } = await client.query(
     'SELECT count(*)::int AS count FROM nursery',
   );
