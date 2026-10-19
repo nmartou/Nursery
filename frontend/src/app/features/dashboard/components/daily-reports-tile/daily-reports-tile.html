@@ -1,0 +1,49 @@
+<app-dashboard-tile heading="Rapports du jour" [subtitle]="subtitle()">
+  @if (loading()) {
+    <p class="state">Chargement…</p>
+  } @else if (error()) {
+    <p class="state state--error">Impossible de charger les rapports du jour.</p>
+  } @else if (stats(); as stats) {
+    @if (stats.closure) {
+      <p class="state state--closed">Crèche fermée : {{ stats.closure }}.</p>
+    } @else if (stats.total === 0) {
+      <p class="state">Aucun enfant inscrit pour cette journée.</p>
+    } @else {
+      <div class="progress">
+        <p class="progress__figure">
+          <strong>{{ done() }}</strong> / {{ stats.total }}
+          <span class="progress__label">rapports terminés</span>
+        </p>
+        <progress
+          class="progress__bar"
+          [value]="done()"
+          [max]="stats.total"
+          aria-label="Rapports terminés"
+        ></progress>
+        <p class="progress__hint" [class.progress__hint--done]="remaining() === 0">
+          @if (remaining() === 0) {
+            Tous les rapports sont terminés.
+          } @else if (remaining() === 1) {
+            1 rapport reste à remplir ou compléter.
+          } @else {
+            {{ remaining() }} rapports restent à remplir ou compléter.
+          }
+        </p>
+      </div>
+
+      <ul class="statuses">
+        @for (row of rows(); track row.status) {
+          <li class="statuses__item" [class]="'statuses__item statuses__item--' + row.status">
+            <span class="statuses__dot" aria-hidden="true"></span>
+            <span class="statuses__label">{{ row.label }}</span>
+            <span class="statuses__count">{{ row.count }}</span>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  <div tileFooter>
+    <a class="tile-link" routerLink="/rapports">Ouvrir les rapports du jour →</a>
+  </div>
+</app-dashboard-tile>

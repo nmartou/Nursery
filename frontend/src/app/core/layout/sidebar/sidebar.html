@@ -1,5 +1,19 @@
-<aside class="sidebar">
-  <div class="sidebar__brand">Nursery</div>
+<aside class="sidebar" [class.sidebar--collapsed]="collapsed()">
+  <div class="sidebar__header">
+    @if (!collapsed()) {
+      <span class="sidebar__brand">Nursery</span>
+    }
+    <button
+      type="button"
+      class="sidebar__toggle"
+      (click)="toggle()"
+      [attr.aria-expanded]="!collapsed()"
+      [attr.aria-label]="collapsed() ? 'Déplier la navigation' : 'Replier la navigation'"
+      [title]="collapsed() ? 'Déplier la navigation' : 'Replier la navigation'"
+    >
+      {{ collapsed() ? '»' : '«' }}
+    </button>
+  </div>
   <nav>
     <ul class="sidebar__list">
       @for (item of items; track item.route) {
@@ -8,9 +22,12 @@
             class="sidebar__link"
             [routerLink]="item.route"
             routerLinkActive="sidebar__link--active"
+            [title]="item.label"
           >
             <span aria-hidden="true">{{ item.icon }}</span>
-            {{ item.label }}
+            @if (!collapsed()) {
+              <span>{{ item.label }}</span>
+            }
           </a>
         </li>
       }

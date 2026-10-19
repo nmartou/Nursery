@@ -1,0 +1,38 @@
+:host {
+  display: block;
+}
+
+.tile {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+
+  &__title {
+    margin: 0;
+    font-size: 1.0625rem;
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    margin: 1.25rem 0;
+  }
+
+  &__footer:empty {
+    display: none;
+  }
+}

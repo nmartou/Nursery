@@ -1,0 +1,124 @@
+.page {
+  &__header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+
+    h1 {
+      margin: 0;
+    }
+  }
+
+  &__date {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+
+    &::first-letter {
+      text-transform: uppercase;
+    }
+  }
+
+  &__error {
+    color: var(--color-error);
+  }
+
+  &__status {
+    color: var(--color-text-muted);
+  }
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  input {
+    padding: 0.4rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: inherit;
+  }
+
+  &__button {
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--color-primary);
+    }
+  }
+}
+
+/* The list takes the whole width, then slides to the left when a report opens. */
+.reports {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5rem;
+
+  &__list {
+    display: block;
+    flex: 0 0 100%;
+    max-width: 40rem;
+    transition:
+      flex-basis 0.3s ease,
+      max-width 0.3s ease;
+  }
+
+  &__form {
+    display: block;
+    flex: 1;
+    min-width: 0;
+    animation: slide-in 0.3s ease;
+  }
+
+  &--open &__list {
+    flex-basis: 18rem;
+    max-width: 18rem;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@media (width <= 900px) {
+  .reports {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__list,
+    &--open &__list {
+      flex-basis: auto;
+      max-width: none;
+    }
+  }
+}
+
+// A closed day (public holiday, closure of the nursery) has no report.
+.closed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--calendar-closure);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+
+  span {
+    color: var(--color-text-muted);
+  }
+}

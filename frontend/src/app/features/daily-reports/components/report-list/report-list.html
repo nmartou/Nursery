@@ -1,0 +1,34 @@
+<section class="list" aria-label="Enfants du jour">
+  <p class="list__summary">
+    @if (remaining() === 0) {
+      Tous les rapports sont terminés.
+    } @else {
+      {{ remaining() }} rapport{{ remaining() > 1 ? 's' : '' }} à remplir ou compléter
+    }
+  </p>
+
+  <ul class="list__items">
+    @for (report of reports(); track report.id) {
+      <li>
+        <button
+          type="button"
+          class="row"
+          [class.row--selected]="report.id === selectedId()"
+          [attr.aria-current]="report.id === selectedId() ? 'true' : null"
+          (click)="selectReport.emit(report.id)"
+        >
+          <span class="row__name">
+            <strong>{{ report.childFirstName }}</strong> {{ report.childLastName }}
+          </span>
+          <app-report-status-badge [status]="report.status" />
+          @if (report.plannedAbsence; as absence) {
+            <span class="row__planned">Absence prévue : {{ plannedLabels[absence.kind] }}</span>
+          }
+          <span class="row__time">Modifié à {{ formatTime(report.updatedAt) }}</span>
+        </button>
+      </li>
+    } @empty {
+      <li class="list__empty">Aucun enfant inscrit ce jour.</li>
+    }
+  </ul>
+</section>

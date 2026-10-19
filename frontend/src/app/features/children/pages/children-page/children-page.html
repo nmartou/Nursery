@@ -1,0 +1,69 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Inscriptions</h1>
+      <p class="page__intro">Les enfants accueillis, leurs parents et les personnes à contacter.</p>
+    </div>
+    <button type="button" class="button button--primary" (click)="openNew()">
+      + Inscrire un enfant
+    </button>
+  </header>
+
+  @if (notice(); as notice) {
+    <p class="page__notice" role="status">{{ notice }}</p>
+  }
+  @if (error(); as error) {
+    <p class="page__error" role="alert">{{ error }}</p>
+  }
+
+  <div class="toolbar">
+    <div class="filters" role="group" aria-label="Filtrer par inscription">
+      @for (item of filters(); track item.value) {
+        <button
+          type="button"
+          class="filters__item"
+          [class.filters__item--active]="filter() === item.value"
+          [attr.aria-pressed]="filter() === item.value"
+          (click)="filter.set(item.value)"
+        >
+          {{ item.label }} <span class="filters__count">{{ item.count }}</span>
+        </button>
+      }
+    </div>
+    <input
+      type="search"
+      class="toolbar__search"
+      placeholder="Rechercher un enfant…"
+      aria-label="Rechercher un enfant"
+      [value]="search()"
+      (input)="search.set($any($event.target).value)"
+    />
+  </div>
+
+  @if (loading()) {
+    <p class="page__status">Chargement…</p>
+  } @else if (list(); as list) {
+    <app-child-list
+      [children]="visibleChildren()"
+      [today]="list.today"
+      (selectChild)="openEdit($event)"
+    />
+  }
+</section>
+
+<app-modal-dialog
+  [open]="editing() !== null"
+  labelledBy="child-form-title"
+  (closeRequested)="requestClose()"
+  (closed)="onClosed()"
+>
+  @if (editing(); as editing) {
+    <app-child-form
+      [child]="editing.child"
+      [saving]="saving()"
+      [saveError]="saveError()"
+      (saveChild)="save($event)"
+      (cancelForm)="requestClose()"
+    />
+  }
+</app-modal-dialog>

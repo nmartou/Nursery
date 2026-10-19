@@ -1,0 +1,253 @@
+<form class="report" [formGroup]="form" (ngSubmit)="submit()">
+  <header class="report__header">
+    <div>
+      <h2 class="report__name">{{ report().childFirstName }} {{ report().childLastName }}</h2>
+      <p class="report__date">{{ longDate() }}</p>
+    </div>
+    <app-report-status-badge [status]="report().status" />
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fermer le formulaire"
+      title="Fermer"
+      (click)="closeForm.emit()"
+    >
+      ✕
+    </button>
+  </header>
+
+  @if (report().plannedAbsence; as absence) {
+    <p class="planned" role="note">
+      <strong>Absence prévue : {{ plannedLabels[absence.kind] }}</strong>
+      @if (absence.comment) {
+        <span>{{ absence.comment }}</span>
+      }
+      <span>
+        Le rapport compte comme absent tant que rien n'y est saisi. Si l'enfant est venu, remplissez
+        simplement sa journée.
+      </span>
+    </p>
+  }
+
+  <!-- Présence -->
+  <section class="section">
+    <div class="section__title">
+      <h3>Présence</h3>
+      <button
+        type="button"
+        class="button"
+        [class.button--danger]="!absent()"
+        [attr.aria-pressed]="absent()"
+        (click)="toggleAbsent()"
+      >
+        {{ absent() ? "Annuler l'absence" : 'Absent' }}
+      </button>
+    </div>
+
+    @if (absent()) {
+      <label class="field">
+        <span>Commentaire d'absence <em>(facultatif)</em></span>
+        <textarea
+          formControlName="absenceComment"
+          rows="2"
+          placeholder="Ex. malade, vacances…"
+        ></textarea>
+      </label>
+    } @else {
+      <div class="grid grid--2">
+        <label class="field">
+          <span>Heure d'arrivée</span>
+          <input type="time" formControlName="arrivalTime" />
+        </label>
+        <label class="field">
+          <span>Heure de départ</span>
+          <input type="time" formControlName="departureTime" />
+        </label>
+      </div>
+    }
+  </section>
+
+  @if (!absent()) {
+    <!-- Alimentation -->
+    <section class="section">
+      <h3>Alimentation</h3>
+
+      <h4>Repas</h4>
+      <div formArrayName="meals" class="entries">
+        @for (meal of meals.controls; track meal; let i = $index) {
+          <div class="entry" [formGroupName]="i">
+            <label class="field field--grow">
+              <input
+                aria-label="Aliment"
+                type="text"
+                formControlName="label"
+                placeholder="Ex. purée de carottes"
+                [class.invalid]="isInvalid('meals.' + i + '.label')"
+              />
+            </label>
+            <label class="field field--unit">
+              <input
+                aria-label="Quantité en grammes"
+                type="number"
+                min="0"
+                formControlName="quantityGrams"
+                placeholder="0"
+              />
+              <span class="unit" aria-hidden="true">g</span>
+            </label>
+            <button
+              type="button"
+              class="icon-button"
+              aria-label="Supprimer ce repas"
+              (click)="remove(meals, i)"
+            >
+              🗑
+            </button>
+          </div>
+        }
+      </div>
+      <button type="button" class="link-button" (click)="addMeal()">+ Ajouter un repas</button>
+
+      <h4>Biberons</h4>
+      <div formArrayName="bottles" class="entries">
+        @for (bottle of bottles.controls; track bottle; let i = $index) {
+          <div class="entry" [formGroupName]="i">
+            <label class="field">
+              <input
+                aria-label="Heure du biberon"
+                type="time"
+                formControlName="time"
+                [class.invalid]="isInvalid('bottles.' + i + '.time')"
+              />
+            </label>
+            <label class="field field--unit">
+              <input
+                aria-label="Quantité en millilitres"
+                type="number"
+                min="0"
+                formControlName="quantityMl"
+                placeholder="0"
+              />
+              <span class="unit" aria-hidden="true">ml</span>
+            </label>
+            <button
+              type="button"
+              class="icon-button"
+              aria-label="Supprimer ce biberon"
+              (click)="remove(bottles, i)"
+            >
+              🗑
+            </button>
+          </div>
+        }
+      </div>
+      <button type="button" class="link-button" (click)="addBottle()">+ Ajouter un biberon</button>
+
+      <label class="field">
+        <span>Commentaire</span>
+        <input type="text" formControlName="mealComment" placeholder="Ex. a refusé les légumes" />
+      </label>
+    </section>
+
+    <!-- Sieste -->
+    <section class="section">
+      <div class="section__title">
+        <h3>Sieste</h3>
+        <label class="checkbox">
+          <input type="checkbox" formControlName="noNap" />
+          Pas de sieste
+        </label>
+      </div>
+
+      @if (!noNap()) {
+        <div formArrayName="naps" class="entries">
+          @for (nap of naps.controls; track nap; let i = $index) {
+            <div class="entry" [formGroupName]="i">
+              <label class="field">
+                <input
+                  aria-label="Début de la sieste"
+                  type="time"
+                  formControlName="startTime"
+                  [class.invalid]="isInvalid('naps.' + i + '.startTime')"
+                />
+              </label>
+              <span aria-hidden="true">→</span>
+              <label class="field">
+                <input aria-label="Fin de la sieste" type="time" formControlName="endTime" />
+              </label>
+              <button
+                type="button"
+                class="icon-button"
+                aria-label="Supprimer cette sieste"
+                (click)="remove(naps, i)"
+              >
+                🗑
+              </button>
+            </div>
+          }
+        </div>
+        <button type="button" class="link-button" (click)="addNap()">+ Ajouter une sieste</button>
+      }
+
+      <label class="field">
+        <span>Commentaire</span>
+        <input type="text" formControlName="napComment" placeholder="Ex. endormi rapidement" />
+      </label>
+    </section>
+
+    <!-- Selles -->
+    <section class="section">
+      <h3>Selles <em>(facultatif)</em></h3>
+      <label class="field">
+        <select aria-label="État des selles" formControlName="stoolStatus">
+          <option value="normal">Normales</option>
+          <option value="other">Autre</option>
+        </select>
+      </label>
+      @if (stoolStatus() === 'other') {
+        <label class="field">
+          <span>Précisez <em>(obligatoire)</em></span>
+          <textarea
+            formControlName="stoolComment"
+            rows="2"
+            placeholder="Ex. selles liquides"
+            [class.invalid]="isInvalid('stoolComment')"
+          ></textarea>
+          @if (isInvalid('stoolComment')) {
+            <small class="error"
+              >Un commentaire est obligatoire si les selles ne sont pas normales.</small
+            >
+          }
+        </label>
+      }
+    </section>
+
+    <!-- Transmission -->
+    <section class="section">
+      <h3>Transmission aux parents</h3>
+      <label class="field">
+        <textarea
+          aria-label="Message pour les parents"
+          formControlName="parentNote"
+          rows="3"
+          placeholder="Ce que les parents doivent savoir sur la journée…"
+        ></textarea>
+      </label>
+    </section>
+  }
+
+  <footer class="report__footer">
+    <span class="report__state">
+      @if (saveError()) {
+        <span class="error">{{ saveError() }}</span>
+      } @else if (form.dirty) {
+        Modifications non enregistrées
+      } @else {
+        Enregistré à {{ lastSaved() }}
+      }
+    </span>
+    <button type="submit" class="button button--primary" [disabled]="saving()">
+      {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+    </button>
+  </footer>
+</form>

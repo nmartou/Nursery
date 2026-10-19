@@ -1,0 +1,248 @@
+:host {
+  display: block;
+
+  // Shown in a modal dialog: never taller than the screen, the body scrolls.
+  max-height: calc(100vh - 2rem);
+}
+
+.child-form {
+  display: flex;
+  flex-direction: column;
+  max-height: inherit;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+
+    > div {
+      flex: 1;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+  }
+
+  // Only the body scrolls: the header and the buttons stay visible.
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-border);
+
+    p {
+      margin: 0;
+      font-size: 0.875rem;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1.25rem 1.5rem;
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 0.75rem;
+    padding: 0;
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  background: var(--color-background);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+}
+
+.grid {
+  display: grid;
+  gap: 0.75rem;
+
+  &--2 {
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+
+  &--3 {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+
+  &--4 {
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+
+  em {
+    color: var(--color-text-muted);
+    font-style: normal;
+    font-weight: 400;
+  }
+
+  input,
+  select {
+    min-width: 0;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-surface);
+    color: inherit;
+
+    &:focus {
+      outline: 2px solid var(--color-primary);
+      outline-offset: -1px;
+    }
+
+    &.invalid {
+      border-color: var(--color-error);
+    }
+  }
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+}
+
+.error {
+  color: var(--color-error);
+  font-size: 0.8125rem;
+}
+
+.button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  color: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-primary-text);
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+.link-button {
+  align-self: flex-start;
+  padding: 0.25rem 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-weight: 600;
+  cursor: pointer;
+
+  &--danger {
+    color: var(--color-error);
+  }
+
+  &:disabled {
+    color: var(--color-text-muted);
+    cursor: not-allowed;
+  }
+}
+
+.icon-button {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--color-background);
+  }
+}
+
+.absences-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.absence {
+  margin: 0;
+  font-size: 0.875rem;
+
+  // Angular drops the whitespace between elements: keep the comment apart.
+  &__comment {
+    margin-left: 0.25rem;
+  }
+}
+
+.absence-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__title {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+  }
+}

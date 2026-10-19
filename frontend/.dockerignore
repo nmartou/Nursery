@@ -2,3 +2,5 @@ node_modules
 dist
 .angular
 *.log
+e2e
+playwright.config.ts

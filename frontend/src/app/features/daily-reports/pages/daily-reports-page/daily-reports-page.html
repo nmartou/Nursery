@@ -1,0 +1,61 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Rapports du jour</h1>
+      <p class="page__date">{{ longDate() }}</p>
+    </div>
+
+    <div class="date-nav" role="group" aria-label="Choix du jour">
+      <button
+        type="button"
+        class="date-nav__button"
+        aria-label="Jour précédent"
+        (click)="previousDay()"
+      >
+        ‹
+      </button>
+      <input
+        type="date"
+        aria-label="Date des rapports"
+        [value]="date() ?? ''"
+        (change)="onDatePicked($any($event.target).value)"
+      />
+      <button type="button" class="date-nav__button" aria-label="Jour suivant" (click)="nextDay()">
+        ›
+      </button>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="page__error" role="alert">{{ error() }}</p>
+  }
+
+  @if (loading()) {
+    <p class="page__status">Chargement…</p>
+  } @else if (closure(); as closure) {
+    <div class="closed" role="status">
+      <strong>La crèche est fermée ce jour-là</strong>
+      <span>{{ closure }} : aucun rapport à remplir.</span>
+    </div>
+  } @else {
+    <div class="reports" [class.reports--open]="selected()">
+      <app-report-list
+        class="reports__list"
+        [reports]="reports()"
+        [selectedId]="selected()?.id ?? null"
+        (selectReport)="select($event)"
+      />
+
+      @if (selected(); as report) {
+        <app-report-form
+          class="reports__form"
+          [report]="report"
+          [saving]="saving()"
+          [saveError]="saveError()"
+          (saveReport)="save($event)"
+          (closeForm)="close()"
+        />
+      }
+    </div>
+  }
+</section>

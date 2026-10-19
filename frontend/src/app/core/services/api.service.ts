@@ -1,8 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { buildUrl } from '../../shared/utils/url.utils';
+
+export type QueryParams = Record<string, string | number | boolean>;
 
 /**
  * Thin wrapper around HttpClient that prefixes every call with the API base URL.
@@ -12,7 +14,19 @@ import { buildUrl } from '../../shared/utils/url.utils';
 export class ApiService {
   private readonly http = inject(HttpClient);
 
-  get<T>(path: string): Observable<T> {
-    return this.http.get<T>(buildUrl(environment.apiUrl, path));
+  get<T>(path: string, params?: QueryParams): Observable<T> {
+    return this.http.get<T>(buildUrl(environment.apiUrl, path), { params });
+  }
+
+  post<T>(path: string, body: unknown): Observable<T> {
+    return this.http.post<T>(buildUrl(environment.apiUrl, path), body);
+  }
+
+  put<T>(path: string, body: unknown): Observable<T> {
+    return this.http.put<T>(buildUrl(environment.apiUrl, path), body);
+  }
+
+  delete(path: string): Observable<void> {
+    return this.http.delete<void>(buildUrl(environment.apiUrl, path));
   }
 }

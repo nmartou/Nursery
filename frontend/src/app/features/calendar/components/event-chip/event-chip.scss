@@ -1,0 +1,67 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.chip {
+  --chip-color: var(--calendar-closure);
+
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 0.125rem 0.375rem;
+  border: none;
+  border-left: 3px solid var(--chip-color);
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--chip-color) 12%, transparent);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--public_holiday {
+    --chip-color: var(--calendar-holiday);
+  }
+
+  &--absence-vacation {
+    --chip-color: var(--calendar-vacation);
+  }
+
+  &--absence-sickness {
+    --chip-color: var(--calendar-sickness);
+  }
+
+  &--absence-other {
+    --chip-color: var(--calendar-absence-other);
+  }
+
+  // Noted in the daily report: same color as the "absent" status there.
+  &--reported_absence {
+    --chip-color: var(--status-absent);
+  }
+
+  &--enrollment_start {
+    --chip-color: var(--calendar-arrival);
+  }
+
+  &--enrollment_end {
+    --chip-color: var(--calendar-departure);
+  }
+}
+
+button.chip {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--chip-color) 24%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+}

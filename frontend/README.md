@@ -14,11 +14,36 @@ npm install                   # installer les dépendances
 npm start                     # serveur de dev sur http://localhost:4200
 npm run build                 # build de production dans dist/frontend/browser
 npm run watch                 # build de dev en continu
-npm test                      # tests unitaires (Vitest)
+npm test                      # tests unitaires et d'intégration des composants (Vitest)
+npm run test:ui               # tests UI dans un vrai navigateur (Playwright)
+npm run lint                  # ESLint (TS + templates) puis Stylelint (SCSS)
+npm run lint:fix              # corrige automatiquement ce qui peut l'être
 npx ng generate component ... # générer un élément Angular
 ```
 
-L'application appelle l'API à l'URL définie dans `src/environments/environment*.ts` (`http://localhost:3000/api` par défaut). Lancer le backend pour que la page d'accueil affiche les données de la crèche.
+### Tests UI (Playwright)
+
+Les tests de `e2e/` pilotent Chromium sur l'application et vérifient ce que voit l'utilisateur : navigation, barre latérale rétractable, inscriptions (filtres, recherche, formulaire modal, validation, ajout et modification, effet sur les rapports du jour), liste des rapports et ses indicateurs, ouverture du formulaire à côté de la liste, saisie, enregistrement, bouton Absent, validation des selles, confirmation avant de perdre des modifications, choix du jour, affichage sur petit écran.
+
+L'API est **simulée** (`e2e/support/mock-api.ts`) : pas besoin du backend, et les données sont identiques à chaque exécution. Le serveur de dev Angular est démarré automatiquement, ou réutilisé s'il tourne déjà.
+
+Attention : tout serveur qui répond sur le port 4200 est réutilisé, y compris le conteneur Docker du frontend (ancienne version). Dans ce cas, lancer les tests sur un autre port : `E2E_PORT=4201 npm run test:ui`.
+
+```bash
+npx playwright install chromium   # une seule fois : télécharger le navigateur
+npm run test:ui                   # lancer les tests
+npm run test:ui:watch             # interface graphique de Playwright (pas à pas, traces)
+npm run test:ui:report            # ouvrir le dernier rapport HTML
+```
+
+```
+e2e/
+├── support/mock-api.ts       # fausse API (interception réseau)
+├── pages/                    # page objects : sélecteurs regroupés par page
+└── *.spec.ts                 # scénarios
+```
+
+L'application appelle l'API à l'URL définie dans `src/environments/environment*.ts` (`http://localhost:3000/api` par défaut). Lancer le backend pour que la page des rapports affiche ses données.
 
 ### Avec Docker (seul)
 
@@ -42,13 +67,67 @@ src/app/
 │   ├── models/               # interfaces transverses
 │   └── services/             # services transverses (ApiService)
 ├── features/                 # un dossier par fonctionnalité, chargé en lazy-loading
-│   └── home/
-│       ├── models/           # modèles de la fonctionnalité
-│       ├── pages/            # composants routés
-│       └── services/         # accès aux données de la fonctionnalité
+│   ├── dashboard/            # tableau de bord (/accueil)
+│   │   ├── components/       # cadre commun des tuiles + une tuile par sujet
+│   │   ├── models/           # modèles de la fonctionnalité
+│   │   ├── pages/            # composants routés (grille de tuiles)
+│   │   └── services/         # accès aux données des tuiles
+│   ├── calendar/             # calendrier (/calendrier)
+│   │   ├── components/       # vue mois, agenda (mobile), pastilles, formulaires fermeture et absence
+│   │   ├── utils/            # grille du mois, textes des événements
+│   │   └── …                 # constants, models, pages, services, testing
+│   ├── children/             # inscriptions des enfants (/inscriptions)
+│   │   ├── components/       # liste, formulaire (dans une modale), badge d'inscription
+│   │   ├── constants/        # libellés (liens de parenté, statuts), règles de saisie
+│   │   ├── models/
+│   │   ├── pages/            # page : filtres, recherche, liste + <dialog> modal
+│   │   ├── services/
+│   │   ├── testing/          # données de test partagées entre les specs
+│   │   └── utils/            # conversion formulaire <-> payload API, validateurs
+│   └── daily-reports/        # rapports journaliers par enfant (/rapports)
+│       ├── components/       # liste, formulaire, badge de statut
+│       ├── constants/        # libellés des statuts
+│       ├── models/
+│       ├── pages/            # page : liste + formulaire
+│       ├── services/
+│       ├── testing/          # données de test partagées entre les specs
+│       └── utils/            # conversion formulaire <-> payload API
 └── shared/                   # éléments réutilisables
-    ├── components/           # composants génériques
+    ├── components/           # composants génériques (ModalDialog : <dialog> modal)
+    ├── styles/               # partials SCSS partagés (_forms.scss pour les formulaires en modale)
     └── utils/                # fonctions utilitaires
 ```
 
+## Pages
+
+- **Tableau de bord** (`/accueil`) : une grille de tuiles indépendantes, qui chargent chacune leurs données. Pour l'instant, une seule tuile, « Rapports du jour » : nombre de rapports terminés (complets ou absents) sur le total, barre de progression, répartition par statut et lien vers les rapports.
+  - Pour ajouter une tuile : créer un composant dans `features/dashboard/components/` qui s'appuie sur `DashboardTile` (titre, sous-titre, contenu et `<div tileFooter>`), ajouter sa méthode dans `DashboardService` (un endpoint du domaine concerné), puis le placer dans la grille de `dashboard-page.html`.
+- **Calendrier** (`/calendrier`) : le mois en grille du lundi au dimanche (sur smartphone, la liste des jours qui ont des événements), avec la navigation entre les mois, un bouton « Aujourd'hui » et des filtres (fermetures, absences, arrivées et départs). On y voit :
+  - les jours fériés et les fermetures de la crèche ;
+  - les absences des enfants, prévues (congés, maladie, autre) ou notées « Absent » dans les rapports du jour ;
+  - les arrivées et départs, issus des dates d'inscription.
+
+  « + Fermeture » et « + Absence », ou un clic sur une fermeture ou une absence, ouvrent son formulaire dans une modale. On peut y modifier ou supprimer l'élément. Une absence doit rester dans la période d'inscription de l'enfant et ne pas en chevaucher une autre. Effets ailleurs : un jour fermé affiche « La crèche est fermée » dans les rapports et le tableau de bord ; une absence prévue rend le rapport « Absent » (avec la raison) tant que rien n'y est saisi, et apparaît dans la liste et la fiche de l'enfant.
+
+- **Inscriptions** (`/inscriptions`) : la liste des enfants (âge, période d'inscription, statut « Inscrit / À venir / Terminé », parents et nombre d'autres contacts), avec des filtres par statut et une recherche par nom (sans tenir compte des accents). « Inscrire un enfant », ou un clic sur une ligne, ouvre le formulaire dans une modale (`<dialog>`) : la page derrière est assombrie, floutée et inactive. Le formulaire se ferme avec Échap, Annuler ou un clic sur le fond, avec une confirmation s'il contient des modifications. Il comprend :
+  - l'enfant (prénom, nom, date de naissance) ;
+  - la période d'inscription (premier jour obligatoire, dernier jour facultatif) ;
+  - les parents responsables (1 à 4 : lien, nom, e-mail, téléphone) ;
+  - les autres contacts à appeler (nom, lien, téléphone).
+
+  Un enfant n'apparaît dans les rapports du jour que pendant sa période d'inscription. La fiche montre aussi ses absences, en cours, à venir et passées : celles prévues au calendrier et celles notées « Absent » dans les rapports (les jours consécutifs sont regroupés). La liste signale les enfants absents aujourd'hui.
+
+- **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
+
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.
+
+## Lint
+
+- **ESLint** (`eslint.config.mjs`) : typescript-eslint en mode typé et angular-eslint, pour le TypeScript comme pour les templates HTML.
+  - Angular : composants `OnPush`, signals, standalone, control flow (`@if`, `@for`), accessibilité des templates, pas de `style` inline dans les templates.
+  - Typage et promesses : comme le backend (pas de `any`, `switch` exhaustifs, conditions booléennes strictes...).
+  - Pas d'URL en dur hors de `src/environments/`, pas de piège de date hors de `shared/utils/date.utils.ts`.
+  - Règles du projet (`eslint-rules/`) :
+    - `nursery/layer-boundaries` : une feature n'importe pas une autre feature, `shared/` ne dépend ni de `core/` ni de `features/`, `core/` ne dépend pas de `features/`.
+    - `nursery/subscribe-handles-errors` : tout `subscribe()` gère les erreurs (`{ next, error }` ou `catchError`), sauf sur `valueChanges` / `statusChanges`.
+- **Stylelint** (`stylelint.config.mjs`) : `stylelint-config-standard-scss` et la règle `nursery/colors-in-root-only` (`stylelint-rules/`). **Les couleurs ne se déclarent que comme variables dans `:root`** (`src/styles.scss`). Partout ailleurs, y compris dans les variables SCSS ou les variables CSS locales, on utilise `var(--…)`. Seuls `transparent`, `currentcolor` et `color-mix()` à partir de variables restent autorisés.

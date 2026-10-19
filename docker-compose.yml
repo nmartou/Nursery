@@ -1,18 +1,72 @@
-# Each service is independent: start one with `docker compose up --build backend`
-# or `docker compose up --build frontend`, or both with `docker compose up --build`.
+# Self-contained stack: PostgreSQL, migrations, API and web app.
+#   docker compose up --build            # everything
+#   docker compose up --build backend    # database + migrations + API
+#   docker compose up --build frontend   # web app only
+# Database credentials come from an optional `.env` file next to this one
+# (see `.env.example`); they are unrelated to backend/.env, which is for local
+# development against a PostgreSQL installed on the machine.
+
+# Connection settings shared by the services that talk to the database.
+x-db-env: &db-env
+  DB_HOST: db
+  DB_PORT: 5432
+  DB_USER: ${POSTGRES_USER:-nursery}
+  DB_PASSWORD: ${POSTGRES_PASSWORD:-nursery}
+  DB_NAME: ${POSTGRES_DB:-nursery}
+
 services:
+  db:
+    image: postgres:18-alpine
+    container_name: nursery-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-nursery}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nursery}
+      POSTGRES_DB: ${POSTGRES_DB:-nursery}
+    volumes:
+      # PostgreSQL 18 images keep their data under /var/lib/postgresql/<version>.
+      - pgdata:/var/lib/postgresql
+    ports:
+      # 5433 on the host, so it does not clash with a local PostgreSQL on 5432.
+      - "${POSTGRES_PORT:-5433}:5432"
+    healthcheck:
+      test:
+        ["CMD-SHELL", 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  # One-shot: applies the pending migrations, then exits.
+  # Sample data: `docker compose run --rm migrate node database/db.js seed`
+  migrate:
+    build: ./backend
+    image: nursery-backend
+    environment: *db-env
+    command: ["node", "database/db.js", "migrate"]
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
     build: ./backend
+    image: nursery-backend
     container_name: nursery-backend
     environment:
+      <<: *db-env
       PORT: 3000
       API_PREFIX: api
       CORS_ORIGIN: http://localhost:4200
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     ports:
-      - '3000:3000'
+      - "3000:3000"
 
   frontend:
     build: ./frontend
+    image: nursery-frontend
     container_name: nursery-frontend
     ports:
-      - '4200:80'
+      - "4200:80"
+
+volumes:
+  pgdata:

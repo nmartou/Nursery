@@ -1,0 +1,102 @@
+<form class="modal-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <header class="modal-form__header">
+    <div>
+      <h2 id="absence-form-title">
+        {{ isNew() ? 'Nouvelle absence' : 'Modifier l’absence' }}
+      </h2>
+      <p>Le rapport de l'enfant apparaît « Absent » ces jours-là, tant que rien n'y est saisi.</p>
+    </div>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fermer le formulaire"
+      title="Fermer"
+      (click)="cancelForm.emit()"
+    >
+      ✕
+    </button>
+  </header>
+
+  <div class="modal-form__body">
+    <label class="field">
+      <span>Enfant</span>
+      <select formControlName="childId" [class.invalid]="isInvalid('childId')">
+        <option value="" disabled>Choisir un enfant…</option>
+        @for (option of children(); track option.id) {
+          <option [value]="option.id">{{ option.firstName }} {{ option.lastName }}</option>
+        }
+      </select>
+      @if (isInvalid('childId')) {
+        <small class="error">Choisissez l'enfant.</small>
+      } @else if (enrollmentText(); as enrollment) {
+        <small class="hint">{{ child()?.firstName }} est {{ enrollment }}.</small>
+      }
+    </label>
+
+    <fieldset class="field">
+      <legend>Motif</legend>
+      <div class="choices">
+        @for (kind of kinds; track kind[0]) {
+          <label class="choice">
+            <input type="radio" formControlName="kind" [value]="kind[0]" />
+            {{ kind[1] }}
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    <div class="grid">
+      <label class="field">
+        <span>Premier jour</span>
+        <input type="date" formControlName="startDate" [class.invalid]="isInvalid('startDate')" />
+        @if (isInvalid('startDate')) {
+          <small class="error">Le premier jour est obligatoire.</small>
+        }
+      </label>
+      <label class="field">
+        <span>Dernier jour</span>
+        <input
+          type="date"
+          formControlName="endDate"
+          [class.invalid]="
+            isInvalid('endDate') || form.hasError('endBeforeStart') || outsideEnrollment()
+          "
+        />
+        @if (isInvalid('endDate')) {
+          <small class="error">Le dernier jour est obligatoire.</small>
+        } @else if (form.hasError('endBeforeStart')) {
+          <small class="error">Le dernier jour doit suivre le premier.</small>
+        }
+      </label>
+    </div>
+    @if (outsideEnrollment()) {
+      <p class="error" role="alert">L'absence doit être comprise dans la période d'inscription.</p>
+    }
+
+    <label class="field">
+      <span>Commentaire <em>(facultatif)</em></span>
+      <textarea
+        formControlName="comment"
+        rows="2"
+        placeholder="Ex. otite, vacances en famille…"
+      ></textarea>
+    </label>
+  </div>
+
+  <footer class="modal-form__footer">
+    @if (!isNew()) {
+      <button type="button" class="button button--danger" (click)="deleteAbsence.emit()">
+        Supprimer
+      </button>
+    }
+    @if (saveError(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+    <div class="modal-form__actions">
+      <button type="button" class="button" (click)="cancelForm.emit()">Annuler</button>
+      <button type="submit" class="button button--primary" [disabled]="saving()">
+        {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </footer>
+</form>

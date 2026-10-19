@@ -1,0 +1,106 @@
+<section class="page">
+  <header class="page__header">
+    <div>
+      <h1>Calendrier</h1>
+      <p class="page__intro">
+        Fermetures de la crèche, jours fériés, absences des enfants, arrivées et départs.
+      </p>
+    </div>
+    <div class="page__actions">
+      <button type="button" class="button" (click)="newClosure()">+ Fermeture</button>
+      <button type="button" class="button button--primary" (click)="newAbsence()">+ Absence</button>
+    </div>
+  </header>
+
+  @if (notice(); as notice) {
+    <p class="page__notice" role="status">{{ notice }}</p>
+  }
+  @if (error(); as error) {
+    <p class="page__error" role="alert">{{ error }}</p>
+  }
+
+  <div class="toolbar">
+    <div class="month-nav" role="group" aria-label="Choix du mois">
+      <button
+        type="button"
+        class="month-nav__button"
+        aria-label="Mois précédent"
+        (click)="showMonth(-1)"
+      >
+        ‹
+      </button>
+      <h2 class="month-nav__label" aria-live="polite">{{ monthLabel() }}</h2>
+      <button
+        type="button"
+        class="month-nav__button"
+        aria-label="Mois suivant"
+        (click)="showMonth(1)"
+      >
+        ›
+      </button>
+      <button type="button" class="button button--small" (click)="showToday()">Aujourd'hui</button>
+    </div>
+
+    <div class="filters" role="group" aria-label="Afficher">
+      @for (filter of filters; track filter.value) {
+        <label [class]="'filters__item filters__item--' + filter.value">
+          <input
+            type="checkbox"
+            [checked]="!hidden().has(filter.value)"
+            (change)="toggleFilter(filter.value)"
+          />
+          {{ filter.label }}
+        </label>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="page__status">Chargement…</p>
+  } @else {
+    <app-month-view
+      class="view view--month"
+      [weeks]="weeks()"
+      [events]="visibleEvents()"
+      (openEvent)="openEvent($event)"
+    />
+    <app-agenda-view
+      class="view view--agenda"
+      [days]="days()"
+      [events]="visibleEvents()"
+      (openEvent)="openEvent($event)"
+    />
+  }
+</section>
+
+<app-modal-dialog
+  size="medium"
+  [open]="editing() !== null"
+  [labelledBy]="editing()?.kind === 'closure' ? 'closure-form-title' : 'absence-form-title'"
+  (closeRequested)="requestClose()"
+  (closed)="onClosed()"
+>
+  @switch (editing()?.kind) {
+    @case ('closure') {
+      <app-closure-form
+        [closure]="$any(editing()?.item ?? null)"
+        [saving]="saving()"
+        [saveError]="saveError()"
+        (saveClosure)="saveClosure($event)"
+        (deleteClosure)="deleteCurrent()"
+        (cancelForm)="requestClose()"
+      />
+    }
+    @case ('absence') {
+      <app-absence-form
+        [absence]="$any(editing()?.item ?? null)"
+        [children]="absenceChildren()"
+        [saving]="saving()"
+        [saveError]="saveError()"
+        (saveAbsence)="saveAbsence($event)"
+        (deleteAbsence)="deleteCurrent()"
+        (cancelForm)="requestClose()"
+      />
+    }
+  }
+</app-modal-dialog>
