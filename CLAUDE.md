@@ -45,7 +45,7 @@ npx playwright test e2e/dashboard.spec.ts
 
 Playwright nécessite `npx playwright install chromium` la première fois.
 
-Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, `frontend`). `docker compose up --build [backend|frontend]` lance les conteneurs.
+Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, `frontend`). `docker compose up --build [backend|frontend]` lance les conteneurs. La stack Docker est autonome : service `db` (PostgreSQL 18, volume `pgdata`, port 5433 sur la machine), service ponctuel `migrate` (`node database/db.js migrate`) dont dépend `backend`, et identifiants dans un `.env` optionnel à la racine (`.env.example`). Elle est indépendante de `backend/.env`, qui sert au développement local sur le PostgreSQL de la machine. L'image backend est en `TZ=Europe/Paris` : le « jour courant » des rapports dépend du fuseau horaire.
 
 ## Architecture backend
 

@@ -4,10 +4,10 @@ Application destinée à faciliter la communication entre les crèches et les pa
 
 ## Structure du dépôt
 
-| Dossier                  | Technologie | Rôle                     |
-| ------------------------ | ----------- | ------------------------ |
-| [`frontend/`](frontend/) | Angular 21  | Interface web            |
-| [`backend/`](backend/)   | NestJS 12   | API REST                 |
+| Dossier                  | Technologie | Rôle          |
+| ------------------------ | ----------- | ------------- |
+| [`frontend/`](frontend/) | Angular 21  | Interface web |
+| [`backend/`](backend/)   | NestJS 12   | API REST      |
 
 L'application est pour l'instant un **monolithe** : un seul backend, organisé en modules métier et en couches (controllers, services, repositories, modèles, DTO, mappers). Chaque projet a son propre README avec ses commandes.
 
@@ -22,13 +22,24 @@ cd frontend && npm install && npm start           # http://localhost:4200
 
 ### Avec Docker Compose
 
-Les deux services sont indépendants et peuvent être lancés séparément :
+La stack est autonome : PostgreSQL tourne dans son propre conteneur, et les migrations s'appliquent automatiquement avant le démarrage de l'API.
 
 ```bash
-docker compose up --build            # les deux
-docker compose up --build backend    # backend seul  -> http://localhost:3000/api
-docker compose up --build frontend   # frontend seul -> http://localhost:4200
+docker compose up --build            # tout : base, migrations, API et frontend
+docker compose up --build backend    # base + migrations + API -> http://localhost:3000/api
+docker compose up --build frontend   # frontend seul           -> http://localhost:4200
 ```
+
+| Service    | Rôle                                                                              |
+| ---------- | --------------------------------------------------------------------------------- |
+| `db`       | PostgreSQL 18, données dans le volume `pgdata`, exposé sur le port **5433**       |
+| `migrate`  | Applique les migrations en attente, puis s'arrête ; l'API attend qu'il ait réussi |
+| `backend`  | API NestJS                                                                        |
+| `frontend` | Application Angular servie par nginx                                              |
+
+- **Identifiants** : `nursery` / `nursery` par défaut. Pour les changer, copier `.env.example` en `.env` à la racine. Ils sont indépendants de `backend/.env`, qui sert au développement local avec un PostgreSQL installé sur la machine.
+- **Données d'exemple** : `docker compose run --rm migrate node database/db.js seed`.
+- **Repartir d'une base vide** : `docker compose down -v` (supprime le volume `pgdata`).
 
 ## Sécurité : à venir
 

@@ -24,9 +24,11 @@ npm run format         # formatage (Prettier)
 
 ### Avec Docker (seul)
 
+Le plus simple est de passer par Docker Compose depuis la racine du dépôt (`docker compose up --build backend`) : il démarre aussi PostgreSQL et applique les migrations. Avec l'image seule, il faut lui fournir une base :
+
 ```bash
 docker build -t nursery-backend .
-docker run -p 3000:3000 nursery-backend
+docker run -p 3000:3000 -e DB_HOST=... -e DB_USER=... -e DB_PASSWORD=... -e DB_NAME=... nursery-backend
 ```
 
 ## Configuration
@@ -59,7 +61,7 @@ npm run db:studio      # explorer la base avec Drizzle Studio
 
 - **Schéma** : `src/common/database/schema.ts` décrit les tables, les contraintes et les relations. C'est la source de vérité.
 - **Migrations** : après une modification du schéma, `npm run db:generate` produit une migration SQL dans `database/migrations/` (à relire puis commiter avec son dossier `meta/`), et `npm run db:migrate` l'applique. On ne modifie jamais une migration déjà appliquée.
-- **Avec Docker** : le conteneur lit `backend/.env` et rejoint la base de la machine hôte via `host.docker.internal`. Les migrations se lancent avec `docker compose run --rm backend npm run db:migrate`. L'image est réglée sur le fuseau `Europe/Paris` (`TZ`), pour que le « jour courant » des rapports soit celui de la crèche et non l'UTC ; on peut le changer en passant `TZ` au conteneur.
+- **Avec Docker** : `docker compose` lance sa propre base PostgreSQL (service `db`, port 5433 sur la machine) et un service `migrate` qui applique les migrations avant le démarrage de l'API. Il n'utilise pas `backend/.env` (voir le README racine). L'image est réglée sur le fuseau `Europe/Paris` (`TZ`), pour que le « jour courant » des rapports soit celui de la crèche et non l'UTC ; on peut le changer en passant `TZ` au conteneur.
 - **Tests e2e** : ils utilisent une base dédiée (`<DB_NAME>_test`), créée et migrée automatiquement. L'utilisateur PostgreSQL doit avoir le droit `CREATEDB` ; sinon, crée cette base à la main une fois.
 
 Tables : `nursery`, `child`, `parent`, `child_parent` (enfants ↔ parents), `daily_report` (un rapport par enfant et par jour de semaine), `report_meal`, `report_bottle`, `report_nap`.
