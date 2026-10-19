@@ -9,6 +9,21 @@
   --color-error: #c0392b;
   --color-sidebar: #2f3e66;
   --color-sidebar-text: #f1f3fa;
+  --color-primary: #2f3e66;
+  --color-primary-text: #ffffff;
+  --color-selected: #e8ecf8;
+
+  --status-todo: #d64545;
+  --status-in-progress: #e08a1e;
+  --status-complete: #2e9d5b;
+  --status-absent: #8a91a3;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 html,

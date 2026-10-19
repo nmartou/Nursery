@@ -8,6 +8,8 @@ services:
       PORT: 3000
       API_PREFIX: api
       CORS_ORIGIN: http://localhost:4200
+      # Switch to "postgres" (and set DB_HOST, DB_USER...) once the database exists
+      DB_DRIVER: memory
     ports:
       - '3000:3000'
 

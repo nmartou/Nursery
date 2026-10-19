@@ -1,1 +1,3 @@
 export const NURSERY_REPOSITORY = Symbol('NURSERY_REPOSITORY');
+export const DAILY_REPORT_REPOSITORY = Symbol('DAILY_REPORT_REPOSITORY');
+export const PG_POOL = Symbol('PG_POOL');

@@ -42,13 +42,26 @@ src/app/
 │   ├── models/               # interfaces transverses
 │   └── services/             # services transverses (ApiService)
 ├── features/                 # un dossier par fonctionnalité, chargé en lazy-loading
-│   └── home/
-│       ├── models/           # modèles de la fonctionnalité
-│       ├── pages/            # composants routés
-│       └── services/         # accès aux données de la fonctionnalité
+│   ├── home/
+│   │   ├── models/           # modèles de la fonctionnalité
+│   │   ├── pages/            # composants routés
+│   │   └── services/         # accès aux données de la fonctionnalité
+│   └── daily-reports/        # rapports journaliers par enfant (/rapports)
+│       ├── components/       # liste, formulaire, badge de statut
+│       ├── constants/        # libellés des statuts
+│       ├── models/
+│       ├── pages/            # page : liste + formulaire
+│       ├── services/
+│       ├── testing/          # données de test partagées entre les specs
+│       └── utils/            # conversion formulaire <-> payload API
 └── shared/                   # éléments réutilisables
     ├── components/           # composants génériques
     └── utils/                # fonctions utilitaires
 ```
+
+## Pages
+
+- **Accueil** (`/accueil`) : informations sur la crèche.
+- **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.

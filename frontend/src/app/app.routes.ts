@@ -13,6 +13,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/home/pages/home-page/home-page').then((m) => m.HomePage),
       },
+      {
+        path: 'rapports',
+        title: 'Rapports du jour · Nursery',
+        loadComponent: () =>
+          import('./features/daily-reports/pages/daily-reports-page/daily-reports-page').then(
+            (m) => m.DailyReportsPage,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },
