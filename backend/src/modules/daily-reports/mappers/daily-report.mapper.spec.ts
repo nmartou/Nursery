@@ -1,6 +1,6 @@
 import type { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import type { DailyReport } from '../models/daily-report.model.js';
-import { EMPTY_REPORT_CONTENT } from '../repositories/mocks/daily-reports.mock.js';
+import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { DailyReportMapper } from './daily-report.mapper.js';
 
 const report: DailyReport = {

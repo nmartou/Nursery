@@ -10,6 +10,11 @@ export function toIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/** PostgreSQL `time` values come back as `HH:mm:ss`: keeps `HH:mm`. */
+export function toHourMinute(time: string): string {
+  return time.slice(0, 5);
+}
+
 /** Returns true when the `YYYY-MM-DD` date is Monday to Friday. */
 export function isWeekday(isoDate: string): boolean {
   const day = new Date(`${isoDate}T00:00:00Z`).getUTCDay();

@@ -1,10 +1,8 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DAILY_REPORT_REPOSITORY } from '../../../common/constants/injection-tokens.js';
 import {
   isWeekday,
   mostRecentWeekday,
@@ -13,14 +11,11 @@ import { DailyReportResponseDto } from '../dtos/daily-report-response.dto.js';
 import { DailyReportListResponseDto } from '../dtos/daily-report-summary.dto.js';
 import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import { DailyReportMapper } from '../mappers/daily-report.mapper.js';
-import type { DailyReportRepository } from '../repositories/daily-report.repository.js';
+import { DailyReportRepository } from '../repositories/daily-report.repository.js';
 
 @Injectable()
 export class DailyReportsService {
-  constructor(
-    @Inject(DAILY_REPORT_REPOSITORY)
-    private readonly repository: DailyReportRepository,
-  ) {}
+  constructor(private readonly repository: DailyReportRepository) {}
 
   /** Lists the reports of a weekday, creating the missing ones for every child. */
   async listForDate(

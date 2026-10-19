@@ -41,7 +41,7 @@ e2e/
 └── *.spec.ts                 # scénarios
 ```
 
-L'application appelle l'API à l'URL définie dans `src/environments/environment*.ts` (`http://localhost:3000/api` par défaut). Lancer le backend pour que la page d'accueil affiche les données de la crèche.
+L'application appelle l'API à l'URL définie dans `src/environments/environment*.ts` (`http://localhost:3000/api` par défaut). Lancer le backend pour que la page des rapports affiche ses données.
 
 ### Avec Docker (seul)
 
@@ -84,7 +84,7 @@ src/app/
 
 ## Pages
 
-- **Accueil** (`/accueil`) : informations sur la crèche.
+- **Accueil** (`/accueil`) : page d'accueil, avec un accès aux rapports du jour.
 - **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.

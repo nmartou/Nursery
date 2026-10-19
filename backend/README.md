@@ -33,41 +33,44 @@ docker run -p 3000:3000 nursery-backend
 
 Variables d'environnement (voir `.env.example`) :
 
-| Variable      | Défaut                  | Description                     |
-| ------------- | ----------------------- | ------------------------------- |
-| `PORT`        | `3000`                  | Port d'écoute                   |
-| `API_PREFIX`  | `api`                   | Préfixe global des routes       |
-| `CORS_ORIGIN` | `http://localhost:4200` | Origine autorisée (frontend)    |
-| `DB_DRIVER`   | `memory`                | `memory` (données mockées) ou `postgres` |
-| `DB_HOST`     | `localhost`             | Hôte PostgreSQL                 |
-| `DB_PORT`     | `5432`                  | Port PostgreSQL                 |
-| `DB_USER`     | `nursery`               | Utilisateur PostgreSQL          |
-| `DB_PASSWORD` | `nursery`               | Mot de passe PostgreSQL         |
-| `DB_NAME`     | `nursery`               | Base PostgreSQL                 |
+| Variable       | Défaut                  | Description                     |
+| -------------- | ----------------------- | ------------------------------- |
+| `PORT`         | `3000`                  | Port d'écoute                   |
+| `API_PREFIX`   | `api`                   | Préfixe global des routes       |
+| `CORS_ORIGIN`  | `http://localhost:4200` | Origine autorisée (frontend)    |
+| `DB_HOST`      | `localhost`             | Hôte PostgreSQL                 |
+| `DB_PORT`      | `5432`                  | Port PostgreSQL                 |
+| `DB_USER`      | `nursery`               | Utilisateur PostgreSQL          |
+| `DB_PASSWORD`  | `nursery`               | Mot de passe PostgreSQL         |
+| `DB_NAME`      | `nursery`               | Base PostgreSQL                 |
+| `DB_TEST_NAME` | `<DB_NAME>_test`        | Base utilisée par les tests e2e |
 
 ## Base de données
 
-Les repositories sont écrits pour **PostgreSQL** (driver `pg`). Tant que la base n'existe pas, `DB_DRIVER=memory` (valeur par défaut) utilise des repositories en mémoire avec des données d'exemple : le jour de semaine le plus récent est pré-rempli avec 5 enfants dans des états différents.
-
-Pour passer sur PostgreSQL :
+L'application utilise **PostgreSQL** (13 ou plus) avec l'ORM **[Drizzle](https://orm.drizzle.team)**. Les identifiants se règlent dans `backend/.env` (copie de `.env.example`, jamais commitée).
 
 ```bash
-psql -U nursery -d nursery -f database/schema.sql   # créer les tables
-psql -U nursery -d nursery -f database/seed.sql     # données d'exemple (vendredi 16/10/2026)
-DB_DRIVER=postgres npm run start:dev
+cp .env.example .env   # puis renseigner DB_USER, DB_PASSWORD, DB_NAME
+npm run db:migrate     # applique les migrations en attente
+npm run db:seed        # données d'exemple (vendredi 16/10/2026), seulement si la base est vide
+npm run start:dev
+npm run db:studio      # explorer la base avec Drizzle Studio
 ```
+
+- **Schéma** : `src/common/database/schema.ts` décrit les tables, les contraintes et les relations. C'est la source de vérité.
+- **Migrations** : après une modification du schéma, `npm run db:generate` produit une migration SQL dans `database/migrations/` (à relire puis commiter avec son dossier `meta/`), et `npm run db:migrate` l'applique. On ne modifie jamais une migration déjà appliquée.
+- **Avec Docker** : le conteneur lit `backend/.env` et rejoint la base de la machine hôte via `host.docker.internal`. Les migrations se lancent avec `docker compose run --rm backend npm run db:migrate`.
+- **Tests e2e** : ils utilisent une base dédiée (`<DB_NAME>_test`), créée et migrée automatiquement. L'utilisateur PostgreSQL doit avoir le droit `CREATEDB` ; sinon, crée cette base à la main une fois.
 
 Tables : `nursery`, `child`, `parent`, `child_parent` (enfants ↔ parents), `daily_report` (un rapport par enfant et par jour de semaine), `report_meal`, `report_bottle`, `report_nap`.
 
 ## Endpoints disponibles
 
-| Méthode | Route                     | Description                                                       |
-| ------- | ------------------------- | ----------------------------------------------------------------- |
-| GET     | `/api/health`             | État de santé de l'API                                            |
-| GET     | `/api/nursery`            | Informations sur la crèche                                        |
+| Méthode | Route                     | Description                                                                                                         |
+| ------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | GET     | `/api/daily-reports?date` | Rapports d'un jour de semaine (créés automatiquement s'ils manquent) ; sans date, le jour de semaine le plus récent |
-| GET     | `/api/daily-reports/:id`  | Détail d'un rapport                                               |
-| PUT     | `/api/daily-reports/:id`  | Enregistrement d'un rapport (statut et heure de modification recalculés) |
+| GET     | `/api/daily-reports/:id`  | Détail d'un rapport                                                                                                 |
+| PUT     | `/api/daily-reports/:id`  | Enregistrement d'un rapport (statut et heure de modification recalculés)                                            |
 
 Statut d'un rapport, calculé : `todo` (rien de saisi), `in_progress`, `complete` (arrivée, départ, repas ou biberon, sieste ou « pas de sieste »), `absent`.
 
@@ -80,33 +83,32 @@ src/
 ├── config/                     # configuration typée (@nestjs/config)
 ├── app.setup.ts                # configuration HTTP partagée (main + tests e2e)
 ├── common/                     # éléments transverses
-│   ├── constants/              # tokens d'injection, constantes
-│   ├── database/               # pool PostgreSQL partagé
+│   ├── constants/              # tokens d'injection (PG_POOL, DRIZZLE)
+│   ├── database/               # schéma Drizzle + module fournissant le client
 │   ├── filters/                # filtres d'exception globaux
 │   └── utils/                  # fonctions utilitaires
 └── modules/                    # un dossier par domaine métier
-    └── nursery/
+    └── daily-reports/
         ├── controllers/        # couche présentation (HTTP)
         ├── dtos/               # objets d'entrée/sortie de l'API
         ├── services/           # couche application (logique métier)
         ├── models/             # modèles du domaine
         ├── mappers/            # conversion modèle <-> DTO
         ├── utils/              # règles métier pures (ex. calcul du statut d'un rapport)
-        └── repositories/       # couche d'accès aux données
-            ├── *.repository.ts           # interface
-            ├── postgres-*.repository.ts  # implémentation PostgreSQL
-            ├── in-memory-*.repository.ts # mock temporaire
-            ├── rows/                     # types des lignes SQL
-            └── mocks/                    # données d'exemple
+        ├── repositories/       # accès aux données via Drizzle
+        └── testing/            # constantes partagées entre les specs
 database/
-├── schema.sql                  # création des tables
-└── seed.sql                    # données d'exemple
+├── migrations/                 # migrations SQL générées par drizzle-kit (+ meta/)
+├── seed.sql                    # données d'exemple
+└── db.js                       # npm run db:migrate / db:seed
+test/
+├── support/test-database.ts    # crée et migre la base de test
+└── *.e2e-spec.ts               # tests HTTP sur la base de test
 ```
 
-Tests : `*.spec.ts` à côté du code (unitaires, dont le repository PostgreSQL avec un pool mocké) et `test/*.e2e-spec.ts` (intégration HTTP).
+Tests : `*.spec.ts` à côté du code (unitaires, repositories simulés par des `vi.fn()`) et `test/*.e2e-spec.ts` (intégration HTTP contre la base de test PostgreSQL).
 
-Flux d'une requête : `Controller → Service → Repository (interface) → implémentation`.
-Le service dépend d'une interface injectée par token (`NURSERY_REPOSITORY`) : l'implémentation en mémoire actuelle pourra être remplacée par une base de données sans modifier la logique métier.
+Flux d'une requête : `Controller → Service → Repository → Drizzle → PostgreSQL`. Le repository convertit les lignes de la base en modèles du domaine, de sorte que les services et les mappers ne dépendent pas du schéma.
 
 Pour ajouter un domaine : créer `src/modules/<domaine>/` avec la même structure et l'importer dans `app.module.ts`.
 

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { EMPTY_REPORT_CONTENT } from '../repositories/mocks/daily-reports.mock.js';
+import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { UpdateDailyReportDto } from './update-daily-report.dto.js';
 
 async function errorsFor(payload: Record<string, unknown>): Promise<string[]> {

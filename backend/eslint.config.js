@@ -95,6 +95,16 @@ export default tseslint.config(
     rules: { 'no-console': 'off' },
   },
   {
+    // Plain Node scripts (database tooling): no type information, CLI output.
+    files: ['**/*.js'],
+    extends: [tseslint.configs.disableTypeChecked],
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/strict-boolean-expressions': 'off',
+      '@typescript-eslint/switch-exhaustiveness-check': 'off',
+    },
+  },
+  {
     files: ['**/*.spec.ts', 'test/**/*.ts'],
     rules: {
       '@typescript-eslint/no-unsafe-assignment': 'off',

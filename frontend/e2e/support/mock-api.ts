@@ -140,16 +140,6 @@ export class MockApi {
     const body = request.postDataJSON() as Partial<MockReport> | null;
     this.requests.push({ method, path: url.pathname + url.search, body });
 
-    if (method === 'GET' && path === '/nursery') {
-      return this.json(route, 200, {
-        id: '1',
-        name: 'Crèche Les Petits Pas',
-        address: '12 rue des Lilas, 75000 Paris',
-        capacity: 40,
-        createdAt: '2026-01-01T00:00:00.000Z',
-      });
-    }
-
     if (method === 'GET' && path === '/daily-reports') {
       const date = url.searchParams.get('date') ?? SEED_DATE;
       if (!isWeekday(date)) {

@@ -1,6 +1,15 @@
-import { isWeekday, mostRecentWeekday, toIsoDate } from './date.util.js';
+import {
+  isWeekday,
+  mostRecentWeekday,
+  toHourMinute,
+  toIsoDate,
+} from './date.util.js';
 
 describe('date utils', () => {
+  it('drops the seconds of a PostgreSQL time', () => {
+    expect(toHourMinute('08:15:00')).toBe('08:15');
+  });
+
   it('formats a local date as YYYY-MM-DD', () => {
     expect(toIsoDate(new Date(2026, 0, 5))).toBe('2026-01-05');
   });

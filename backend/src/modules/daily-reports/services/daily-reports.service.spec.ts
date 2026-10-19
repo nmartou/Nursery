@@ -1,69 +1,67 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Test, type TestingModule } from '@nestjs/testing';
-import { DAILY_REPORT_REPOSITORY } from '../../../common/constants/injection-tokens.js';
-import { InMemoryDailyReportRepository } from '../repositories/in-memory-daily-report.repository.js';
-import {
-  EMPTY_REPORT_CONTENT,
-  MOCK_CHILDREN,
-} from '../repositories/mocks/daily-reports.mock.js';
+import type { DailyReport } from '../models/daily-report.model.js';
+import type { DailyReportRepository } from '../repositories/daily-report.repository.js';
+import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { DailyReportsService } from './daily-reports.service.js';
 
+const report: DailyReport = {
+  ...EMPTY_REPORT_CONTENT,
+  id: 'r1',
+  childId: 'c1',
+  childFirstName: 'Léa',
+  childLastName: 'Martin',
+  date: '2026-10-16',
+  createdAt: new Date('2026-10-16T06:00:00Z'),
+  updatedAt: new Date('2026-10-16T07:00:00Z'),
+};
+
+function createRepositoryMock() {
+  return {
+    ensureReportsForDate: vi.fn(() => Promise.resolve()),
+    findByDate: vi.fn(() => Promise.resolve([report])),
+    findById: vi.fn((id: string) =>
+      Promise.resolve(id === report.id ? report : null),
+    ),
+    update: vi.fn((id: string) =>
+      Promise.resolve(id === report.id ? { ...report, absent: true } : null),
+    ),
+  };
+}
+
 describe('DailyReportsService', () => {
+  let repository: ReturnType<typeof createRepositoryMock>;
   let service: DailyReportsService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        DailyReportsService,
-        {
-          provide: DAILY_REPORT_REPOSITORY,
-          useValue: new InMemoryDailyReportRepository(
-            MOCK_CHILDREN,
-            '2026-10-16',
-          ),
-        },
-      ],
-    }).compile();
-
-    service = module.get(DailyReportsService);
+  beforeEach(() => {
+    repository = createRepositoryMock();
+    service = new DailyReportsService(
+      repository as unknown as DailyReportRepository,
+    );
   });
 
-  it('lists the seeded reports with one status per child', async () => {
+  it('creates the missing reports before listing the day', async () => {
     const list = await service.listForDate('2026-10-16');
-    const statuses = Object.fromEntries(
-      list.reports.map((report) => [report.childFirstName, report.status]),
-    );
-    expect(list.date).toBe('2026-10-16');
-    expect(statuses).toEqual({
-      Hugo: 'in_progress',
-      Chloé: 'todo',
-      Inès: 'in_progress',
-      Léa: 'complete',
-      Nathan: 'absent',
+
+    expect(repository.ensureReportsForDate).toHaveBeenCalledWith('2026-10-16');
+    expect(list).toEqual({
+      date: '2026-10-16',
+      reports: [expect.objectContaining({ id: 'r1', status: 'todo' })],
     });
   });
 
-  it('creates empty reports automatically for a new weekday', async () => {
-    const list = await service.listForDate('2026-10-19');
-    expect(list.reports).toHaveLength(MOCK_CHILDREN.length);
-    expect(list.reports.every((report) => report.status === 'todo')).toBe(true);
-  });
-
-  it('refuses weekends', async () => {
+  it('refuses weekends without querying the database', async () => {
     await expect(service.listForDate('2026-10-17')).rejects.toBeInstanceOf(
       BadRequestException,
     );
+    expect(repository.ensureReportsForDate).not.toHaveBeenCalled();
   });
 
-  it('saves a report and recomputes its status', async () => {
-    const { reports } = await service.listForDate('2026-10-16');
-    const chloe = reports.find((report) => report.childFirstName === 'Chloé')!;
-    const saved = await service.update(chloe.id, {
+  it('returns the saved report with its recomputed status', async () => {
+    const saved = await service.update('r1', {
       ...EMPTY_REPORT_CONTENT,
       absent: true,
     });
     expect(saved.status).toBe('absent');
-    expect((await service.getById(chloe.id)).absent).toBe(true);
   });
 
   it('throws NotFound for an unknown report', async () => {

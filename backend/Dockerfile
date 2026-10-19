@@ -17,6 +17,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 COPY --from=build /app/dist ./dist
+# Migrations and seed, run with `docker compose run --rm backend npm run db:migrate`
+COPY database ./database
 
 EXPOSE 3000
 CMD ["node", "dist/main.js"]

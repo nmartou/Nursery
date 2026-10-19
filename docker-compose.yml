@@ -4,12 +4,18 @@ services:
   backend:
     build: ./backend
     container_name: nursery-backend
+    # Database credentials (DB_USER, DB_PASSWORD, DB_NAME...) come from backend/.env
+    env_file:
+      - path: ./backend/.env
+        required: false
     environment:
       PORT: 3000
       API_PREFIX: api
       CORS_ORIGIN: http://localhost:4200
-      # Switch to "postgres" (and set DB_HOST, DB_USER...) once the database exists
-      DB_DRIVER: memory
+      # PostgreSQL runs on the host machine, not in a container
+      DB_HOST: host.docker.internal
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     ports:
       - '3000:3000'
 
