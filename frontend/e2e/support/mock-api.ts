@@ -1,4 +1,4 @@
-import { Page, Request, Route } from '@playwright/test';
+import type { Page, Request, Route } from '@playwright/test';
 
 /**
  * In-memory fake of the backend API, installed with `page.route`.
@@ -222,10 +222,9 @@ export class MockApi {
       report.status = computeStatus(report);
       this.reports.push(report);
     }
-    this.reports.sort(
-      (a, b) =>
-        a.childLastName.localeCompare(b.childLastName) ||
-        a.childFirstName.localeCompare(b.childFirstName),
-    );
+    this.reports.sort((a, b) => {
+      const byLastName = a.childLastName.localeCompare(b.childLastName);
+      return byLastName !== 0 ? byLastName : a.childFirstName.localeCompare(b.childFirstName);
+    });
   }
 }

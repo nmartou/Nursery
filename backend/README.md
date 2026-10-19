@@ -17,7 +17,8 @@ npm run build          # compiler dans dist/
 npm run start:prod     # lancer la version compilée
 npm test               # tests unitaires (Vitest)
 npm run test:e2e       # tests end-to-end
-npm run lint           # lint (oxlint)
+npm run lint           # lint (ESLint, règles typées + règles du projet)
+npm run lint:fix       # corrige automatiquement ce qui peut l'être
 npm run format         # formatage (Prettier)
 ```
 
@@ -108,3 +109,14 @@ Flux d'une requête : `Controller → Service → Repository (interface) → imp
 Le service dépend d'une interface injectée par token (`NURSERY_REPOSITORY`) : l'implémentation en mémoire actuelle pourra être remplacée par une base de données sans modifier la logique métier.
 
 Pour ajouter un domaine : créer `src/modules/<domaine>/` avec la même structure et l'importer dans `app.module.ts`.
+
+## Lint
+
+ESLint (`eslint.config.js`) avec typescript-eslint en mode typé. En plus des règles recommandées :
+
+- **Promesses** : `no-floating-promises`, `no-misused-promises`.
+- **Typage** : pas de `any` ni de `!`, `switch` exhaustifs sur les unions, conditions booléennes strictes (un `0` n'est jamais traité comme « faux »).
+- **Dates** : `toISOString().slice(...)` et `new Date('YYYY-MM-DD')` sont interdits hors de `common/utils/date.util.ts` (décalage de jour selon le fuseau).
+- **Règles du projet** (`eslint-rules/`) :
+  - `nursery/module-boundaries` : un module n'importe pas les fichiers internes d'un autre (seul son `*.module.ts` est autorisé), `common/` ne dépend d'aucun module, un controller n'importe jamais un repository.
+  - `nursery/dto-properties-validated` : chaque propriété d'un DTO d'entrée porte un décorateur class-validator, sinon le `ValidationPipe` la supprime. Les `*ResponseDto` et `*SummaryDto` sont exemptés.

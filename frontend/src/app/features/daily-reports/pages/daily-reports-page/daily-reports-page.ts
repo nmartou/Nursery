@@ -1,8 +1,16 @@
-import { Component, computed, inject, OnInit, signal, viewChild } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  signal,
+  type OnInit,
+  viewChild,
+} from '@angular/core';
 import { addWeekdays, formatLongDate, isWeekday } from '../../../../shared/utils/date.utils';
 import { ReportForm } from '../../components/report-form/report-form';
 import { ReportList } from '../../components/report-list/report-list';
-import {
+import type {
   DailyReport,
   DailyReportPayload,
   DailyReportSummary,
@@ -14,6 +22,7 @@ const UNSAVED_CHANGES_MESSAGE =
 
 @Component({
   selector: 'app-daily-reports-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReportList, ReportForm],
   templateUrl: './daily-reports-page.html',
   styleUrl: './daily-reports-page.scss',

@@ -1,4 +1,4 @@
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { NURSERY_REPOSITORY } from '../../../common/constants/injection-tokens.js';
 import { InMemoryNurseryRepository } from '../repositories/in-memory-nursery.repository.js';
 import { NurseryService } from './nursery.service.js';

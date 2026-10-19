@@ -16,6 +16,8 @@ npm run build                 # build de production dans dist/frontend/browser
 npm run watch                 # build de dev en continu
 npm test                      # tests unitaires et d'intégration des composants (Vitest)
 npm run test:ui               # tests UI dans un vrai navigateur (Playwright)
+npm run lint                  # ESLint (TS + templates) puis Stylelint (SCSS)
+npm run lint:fix              # corrige automatiquement ce qui peut l'être
 npx ng generate component ... # générer un élément Angular
 ```
 
@@ -86,3 +88,14 @@ src/app/
 - **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 
 Pour ajouter une page : créer `features/<nom>/pages/...`, déclarer la route enfant dans `app.routes.ts` et ajouter l'entrée dans `core/constants/navigation.constants.ts`.
+
+## Lint
+
+- **ESLint** (`eslint.config.mjs`) : typescript-eslint en mode typé et angular-eslint, pour le TypeScript comme pour les templates HTML.
+  - Angular : composants `OnPush`, signals, standalone, control flow (`@if`, `@for`), accessibilité des templates, pas de `style` inline dans les templates.
+  - Typage et promesses : comme le backend (pas de `any`, `switch` exhaustifs, conditions booléennes strictes...).
+  - Pas d'URL en dur hors de `src/environments/`, pas de piège de date hors de `shared/utils/date.utils.ts`.
+  - Règles du projet (`eslint-rules/`) :
+    - `nursery/layer-boundaries` : une feature n'importe pas une autre feature, `shared/` ne dépend ni de `core/` ni de `features/`, `core/` ne dépend pas de `features/`.
+    - `nursery/subscribe-handles-errors` : tout `subscribe()` gère les erreurs (`{ next, error }` ou `catchError`), sauf sur `valueChanges` / `statusChanges`.
+- **Stylelint** (`stylelint.config.mjs`) : `stylelint-config-standard-scss` et la règle `nursery/colors-in-root-only` (`stylelint-rules/`). **Les couleurs ne se déclarent que comme variables dans `:root`** (`src/styles.scss`). Partout ailleurs, y compris dans les variables SCSS ou les variables CSS locales, on utilise `var(--…)`. Seuls `transparent`, `currentcolor` et `color-mix()` à partir de variables restent autorisés.

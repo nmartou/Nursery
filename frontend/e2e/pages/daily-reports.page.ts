@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 /** Page object for /rapports: keeps selectors in one place. */
 export class DailyReportsPage {

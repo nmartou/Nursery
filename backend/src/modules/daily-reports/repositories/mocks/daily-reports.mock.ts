@@ -1,5 +1,5 @@
-import { Child } from '../../models/child.model.js';
-import { DailyReportContent } from '../../models/daily-report.model.js';
+import type { Child } from '../../models/child.model.js';
+import type { DailyReportContent } from '../../models/daily-report.model.js';
 
 /** Mock data used while no PostgreSQL database is available (mirrors database/seed.sql). */
 

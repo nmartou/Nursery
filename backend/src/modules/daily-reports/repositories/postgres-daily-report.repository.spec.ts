@@ -1,7 +1,7 @@
 import type { Pool } from 'pg';
 import { EMPTY_REPORT_CONTENT } from './mocks/daily-reports.mock.js';
 import { PostgresDailyReportRepository } from './postgres-daily-report.repository.js';
-import { DailyReportRow } from './rows/daily-report.rows.js';
+import type { DailyReportRow } from './rows/daily-report.rows.js';
 
 const reportRow: DailyReportRow = {
   id: 'r1',

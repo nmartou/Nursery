@@ -1,5 +1,5 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
+import { Test, type TestingModule } from '@nestjs/testing';
 import { DAILY_REPORT_REPOSITORY } from '../../../common/constants/injection-tokens.js';
 import { InMemoryDailyReportRepository } from '../repositories/in-memory-daily-report.repository.js';
 import {

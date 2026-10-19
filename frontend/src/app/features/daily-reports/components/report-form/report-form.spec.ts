@@ -1,5 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DailyReportPayload } from '../../models/daily-report.model';
+import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import type { DailyReportPayload } from '../../models/daily-report.model';
 import { buildReport } from '../../testing/daily-report.fixtures';
 import { ReportForm } from './report-form';
 

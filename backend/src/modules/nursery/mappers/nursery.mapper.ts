@@ -1,6 +1,6 @@
 import { toIsoString } from '../../../common/utils/date.util.js';
-import { NurseryResponseDto } from '../dtos/nursery-response.dto.js';
-import { Nursery } from '../models/nursery.model.js';
+import type { NurseryResponseDto } from '../dtos/nursery-response.dto.js';
+import type { Nursery } from '../models/nursery.model.js';
 
 export class NurseryMapper {
   static toResponseDto(nursery: Nursery): NurseryResponseDto {

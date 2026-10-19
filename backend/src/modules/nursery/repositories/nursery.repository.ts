@@ -1,4 +1,4 @@
-import { Nursery } from '../models/nursery.model.js';
+import type { Nursery } from '../models/nursery.model.js';
 
 export interface NurseryRepository {
   findCurrent(): Promise<Nursery>;

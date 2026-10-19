@@ -175,7 +175,7 @@ test.describe('Rapports du jour', () => {
       expect(api.saves()).toHaveLength(0);
     });
 
-    test('« Pas de sieste » masque les plages de sieste', async ({ page }) => {
+    test('« Pas de sieste » masque les plages de sieste', async () => {
       await reports.open('Hugo');
       const sieste = reports.section('Sieste');
       await expect(sieste.getByRole('button', { name: '+ Ajouter une sieste' })).toBeVisible();

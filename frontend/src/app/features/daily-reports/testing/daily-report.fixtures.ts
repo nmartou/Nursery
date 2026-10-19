@@ -1,4 +1,4 @@
-import { DailyReport, DailyReportSummary } from '../models/daily-report.model';
+import type { DailyReport, DailyReportSummary } from '../models/daily-report.model';
 
 /** Shared test data for the daily-reports feature specs. */
 

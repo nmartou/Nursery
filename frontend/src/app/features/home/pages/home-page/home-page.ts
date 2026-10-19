@@ -1,9 +1,10 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
-import { Nursery } from '../../models/nursery.model';
+import { ChangeDetectionStrategy, Component, inject, signal, type OnInit } from '@angular/core';
+import type { Nursery } from '../../models/nursery.model';
 import { NurseryService } from '../../services/nursery.service';
 
 @Component({
   selector: 'app-home-page',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './home-page.html',
   styleUrl: './home-page.scss',
 })

@@ -1,4 +1,4 @@
-import { DailyReportPayload } from '../models/daily-report.model';
+import type { DailyReportPayload } from '../models/daily-report.model';
 import { toFormValue, toPayload } from './report-form.utils';
 
 const payload: DailyReportPayload = {

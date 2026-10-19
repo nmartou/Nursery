@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../../environments/environment';
-import { DailyReportPayload } from '../models/daily-report.model';
+import type { DailyReportPayload } from '../models/daily-report.model';
 import { DailyReportsService } from './daily-reports.service';
 
 describe('DailyReportsService', () => {

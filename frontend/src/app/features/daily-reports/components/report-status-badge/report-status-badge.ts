@@ -1,9 +1,10 @@
-import { Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { REPORT_STATUS_DISPLAY } from '../../constants/report-status.constants';
-import { ReportStatus } from '../../models/daily-report.model';
+import type { ReportStatus } from '../../models/daily-report.model';
 
 @Component({
   selector: 'app-report-status-badge',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="badge" [class]="'badge badge--' + status()" [title]="display().hint">
       <span class="badge__dot" aria-hidden="true"></span>

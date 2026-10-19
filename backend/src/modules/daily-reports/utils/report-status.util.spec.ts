@@ -1,4 +1,4 @@
-import { DailyReportContent } from '../models/daily-report.model.js';
+import type { DailyReportContent } from '../models/daily-report.model.js';
 import { computeReportStatus } from './report-status.util.js';
 
 const empty: DailyReportContent = {

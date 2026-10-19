@@ -1,4 +1,4 @@
-import {
+import type {
   DailyReportContent,
   ReportStatus,
 } from '../models/daily-report.model.js';

@@ -1,13 +1,27 @@
-import { Component, computed, effect, inject, input, output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+} from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { FormArray, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  type FormArray,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { currentTime, formatLongDate, formatTime } from '../../../../shared/utils/date.utils';
-import { DailyReport, DailyReportPayload, StoolStatus } from '../../models/daily-report.model';
+import type { DailyReport, DailyReportPayload, StoolStatus } from '../../models/daily-report.model';
 import { toFormValue, toPayload } from '../../utils/report-form.utils';
 import { ReportStatusBadge } from '../report-status-badge/report-status-badge';
 
 @Component({
   selector: 'app-report-form',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, ReportStatusBadge],
   templateUrl: './report-form.html',
   styleUrl: './report-form.scss',
@@ -44,7 +58,7 @@ export class ReportForm {
     initialValue: false,
   });
   protected readonly stoolStatus = toSignal(this.form.controls.stoolStatus.valueChanges, {
-    initialValue: 'normal' as StoolStatus,
+    initialValue: 'normal',
   });
 
   protected readonly longDate = computed(() => formatLongDate(this.report().date));

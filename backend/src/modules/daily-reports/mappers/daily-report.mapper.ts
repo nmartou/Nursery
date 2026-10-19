@@ -1,8 +1,8 @@
 import { toIsoString } from '../../../common/utils/date.util.js';
-import { DailyReportResponseDto } from '../dtos/daily-report-response.dto.js';
-import { DailyReportSummaryDto } from '../dtos/daily-report-summary.dto.js';
-import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
-import {
+import type { DailyReportResponseDto } from '../dtos/daily-report-response.dto.js';
+import type { DailyReportSummaryDto } from '../dtos/daily-report-summary.dto.js';
+import type { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
+import type {
   DailyReport,
   DailyReportContent,
 } from '../models/daily-report.model.js';

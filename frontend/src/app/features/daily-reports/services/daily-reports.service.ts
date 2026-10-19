@@ -1,7 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import type { Observable } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
-import { DailyReport, DailyReportList, DailyReportPayload } from '../models/daily-report.model';
+import type {
+  DailyReport,
+  DailyReportList,
+  DailyReportPayload,
+} from '../models/daily-report.model';
 
 @Injectable({ providedIn: 'root' })
 export class DailyReportsService {

@@ -1,4 +1,4 @@
-import { ReportStatus } from '../models/daily-report.model';
+import type { ReportStatus } from '../models/daily-report.model';
 
 export interface ReportStatusDisplay {
   label: string;

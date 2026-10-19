@@ -1,10 +1,11 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { formatTime } from '../../../../shared/utils/date.utils';
-import { DailyReportSummary } from '../../models/daily-report.model';
+import type { DailyReportSummary } from '../../models/daily-report.model';
 import { ReportStatusBadge } from '../report-status-badge/report-status-badge';
 
 @Component({
   selector: 'app-report-list',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReportStatusBadge],
   templateUrl: './report-list.html',
   styleUrl: './report-list.scss',

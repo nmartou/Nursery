@@ -1,4 +1,4 @@
-import { DailyReportPayload, StoolStatus } from '../models/daily-report.model';
+import type { DailyReportPayload, StoolStatus } from '../models/daily-report.model';
 
 /** Raw value of the report form: optional text fields are empty strings, not null. */
 export interface ReportFormValue {

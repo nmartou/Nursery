@@ -42,7 +42,7 @@
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--color-sidebar-hover);
     }
 
     &:focus-visible {
@@ -68,11 +68,11 @@
     white-space: nowrap;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--color-sidebar-hover);
     }
 
     &--active {
-      background: rgba(255, 255, 255, 0.16);
+      background: var(--color-sidebar-active);
       font-weight: 600;
     }
   }

@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { mostRecentWeekday } from '../../../common/utils/date.util.js';
-import { Child } from '../models/child.model.js';
-import {
+import type { Child } from '../models/child.model.js';
+import type {
   DailyReport,
   DailyReportContent,
 } from '../models/daily-report.model.js';
-import { DailyReportRepository } from './daily-report.repository.js';
+import type { DailyReportRepository } from './daily-report.repository.js';
 import {
   EMPTY_REPORT_CONTENT,
   MOCK_CHILDREN,
@@ -43,11 +43,12 @@ export class InMemoryDailyReportRepository implements DailyReportRepository {
   findByDate(date: string): Promise<DailyReport[]> {
     const reports = [...this.reports.values()]
       .filter((report) => report.date === date)
-      .sort(
-        (a, b) =>
-          a.childLastName.localeCompare(b.childLastName) ||
-          a.childFirstName.localeCompare(b.childFirstName),
-      );
+      .sort((a, b) => {
+        const byLastName = a.childLastName.localeCompare(b.childLastName);
+        return byLastName !== 0
+          ? byLastName
+          : a.childFirstName.localeCompare(b.childFirstName);
+      });
     return Promise.resolve(reports.map(clone));
   }
 
