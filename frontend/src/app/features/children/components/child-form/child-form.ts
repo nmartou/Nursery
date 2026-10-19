@@ -34,6 +34,14 @@ import {
   toFormValue,
   toPayload,
 } from '../../utils/child-form.utils';
+import { RouterLink } from '@angular/router';
+import { todayIsoDate } from '../../../../shared/utils/date.utils';
+import {
+  absenceLabel,
+  absenceSource,
+  formatPeriod,
+  groupAbsences,
+} from '../../utils/absence.utils';
 import { EnrollmentBadge } from '../enrollment-badge/enrollment-badge';
 
 function parentGroup(fb: NonNullableFormBuilder, value: ParentFormValue) {
@@ -61,7 +69,7 @@ const PARENTS_VALIDATORS = [Validators.minLength(1), distinctEmailsValidator];
 @Component({
   selector: 'app-child-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, EnrollmentBadge],
+  imports: [ReactiveFormsModule, EnrollmentBadge, RouterLink],
   templateUrl: './child-form.html',
   styleUrl: './child-form.scss',
 })
@@ -100,6 +108,33 @@ export class ChildForm {
   ][];
   protected readonly maxParents = MAX_PARENTS;
   protected readonly maxContacts = MAX_CONTACTS;
+  protected readonly absenceLabel = absenceLabel;
+  protected readonly absenceSource = absenceSource;
+  protected readonly formatPeriod = formatPeriod;
+
+  /** The child's absences around today; nothing for a new registration. */
+  protected readonly absenceGroups = computed(() => {
+    const child = this.child();
+    if (!child) {
+      return null;
+    }
+    const groups = groupAbsences(child.absences, todayIsoDate());
+    return [
+      {
+        key: 'current',
+        title: 'En cours',
+        absences: groups.current,
+        empty: "Pas d'absence aujourd'hui.",
+      },
+      {
+        key: 'upcoming',
+        title: 'À venir',
+        absences: groups.upcoming,
+        empty: 'Aucune absence prévue.',
+      },
+      { key: 'past', title: 'Passées', absences: groups.past, empty: 'Aucune absence passée.' },
+    ];
+  });
 
   constructor() {
     // Reload the form whenever another child (or the saved version) comes in.

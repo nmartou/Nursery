@@ -1,4 +1,4 @@
-import type { EnrollmentStatus, ParentRelationship } from '../models/child.model';
+import type { ChildAbsence, EnrollmentStatus, ParentRelationship } from '../models/child.model';
 
 export const PARENT_RELATIONSHIP_LABELS: Record<ParentRelationship, string> = {
   mother: 'Mère',
@@ -26,3 +26,9 @@ export const PHONE_PATTERN = /^\+?[0-9 ().-]{6,30}$/;
 
 export const MAX_PARENTS = 4;
 export const MAX_CONTACTS = 10;
+
+export const ABSENCE_KIND_LABELS: Record<NonNullable<ChildAbsence['kind']>, string> = {
+  vacation: 'Congés',
+  sickness: 'Maladie',
+  other: 'Absence',
+};

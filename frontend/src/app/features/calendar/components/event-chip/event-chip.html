@@ -1,0 +1,12 @@
+@if (editable()) {
+  <button
+    type="button"
+    [class]="'chip chip--' + variant()"
+    [title]="tooltip()"
+    (click)="openEvent.emit(event())"
+  >
+    {{ text() }}
+  </button>
+} @else {
+  <span [class]="'chip chip--' + variant()" [title]="tooltip()">{{ text() }}</span>
+}

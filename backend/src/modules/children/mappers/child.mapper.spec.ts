@@ -31,3 +31,59 @@ describe('ChildMapper', () => {
     expect(summary.contactCount).toBe(1);
   });
 });
+
+describe('ChildMapper and absences', () => {
+  const child = {
+    ...CHILD,
+    absences: [
+      {
+        id: 'a1',
+        startDate: '2026-09-07',
+        endDate: '2026-09-11',
+        kind: 'vacation' as const,
+        comment: null,
+      },
+      {
+        id: 'a2',
+        startDate: '2026-10-19',
+        endDate: '2026-10-20',
+        kind: 'sickness' as const,
+        comment: 'Otite',
+      },
+      {
+        id: 'a3',
+        startDate: '2026-12-21',
+        endDate: '2026-12-24',
+        kind: 'vacation' as const,
+        comment: null,
+      },
+    ],
+  };
+
+  it('lists every absence in the detail, past ones included, most recent first', () => {
+    const dto = ChildMapper.toResponseDto(
+      {
+        ...child,
+        reportedAbsences: [
+          { reportId: 'r1', date: '2026-10-02', comment: 'Fièvre' },
+        ],
+      },
+      '2026-10-20',
+    );
+    expect(dto.absences.map((a) => [a.id, a.source])).toEqual([
+      ['a3', 'calendar'],
+      ['a2', 'calendar'],
+      ['report-r1', 'report'],
+      ['a1', 'calendar'],
+    ]);
+  });
+
+  it('gives the absence covering today in the summary', () => {
+    expect(
+      ChildMapper.toSummaryDto(child, '2026-10-19').currentAbsence?.id,
+    ).toBe('a2');
+    expect(
+      ChildMapper.toSummaryDto(child, '2026-10-21').currentAbsence,
+    ).toBeNull();
+  });
+});

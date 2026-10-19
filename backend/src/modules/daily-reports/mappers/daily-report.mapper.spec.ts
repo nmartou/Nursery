@@ -4,6 +4,7 @@ import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { DailyReportMapper } from './daily-report.mapper.js';
 
 const report: DailyReport = {
+  plannedAbsence: null,
   ...EMPTY_REPORT_CONTENT,
   id: 'r1',
   childId: 'c1',
@@ -30,6 +31,7 @@ describe('DailyReportMapper', () => {
       childFirstName: 'Léa',
       childLastName: 'Martin',
       status: 'in_progress',
+      plannedAbsence: null,
       updatedAt: '2026-10-16T07:30:00.000Z',
     });
   });

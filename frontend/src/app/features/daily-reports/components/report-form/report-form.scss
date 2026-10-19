@@ -226,3 +226,20 @@
     background: var(--color-background);
   }
 }
+
+// Absence declared in the calendar for that day.
+.planned {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 1rem 1.5rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--calendar-sickness);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--calendar-sickness) 8%, transparent);
+  font-size: 0.875rem;
+
+  span {
+    color: var(--color-text-muted);
+  }
+}

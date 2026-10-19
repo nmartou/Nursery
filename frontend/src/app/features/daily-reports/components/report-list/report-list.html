@@ -21,6 +21,9 @@
             <strong>{{ report.childFirstName }}</strong> {{ report.childLastName }}
           </span>
           <app-report-status-badge [status]="report.status" />
+          @if (report.plannedAbsence; as absence) {
+            <span class="row__planned">Absence prévue : {{ plannedLabels[absence.kind] }}</span>
+          }
           <span class="row__time">Modifié à {{ formatTime(report.updatedAt) }}</span>
         </button>
       </li>

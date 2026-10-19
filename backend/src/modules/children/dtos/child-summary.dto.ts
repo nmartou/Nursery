@@ -1,3 +1,4 @@
+import type { ChildAbsenceResponseDto } from './child-response.dto.js';
 import type {
   EnrollmentStatus,
   ParentRelationship,
@@ -21,6 +22,8 @@ export class ChildSummaryDto {
   enrollmentStatus: EnrollmentStatus;
   parents: ChildParentSummaryDto[];
   contactCount: number;
+  /** The absence covering today, if any. */
+  currentAbsence: ChildAbsenceResponseDto | null;
   updatedAt: string;
 }
 

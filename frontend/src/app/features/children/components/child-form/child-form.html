@@ -277,6 +277,34 @@
         </button>
       }
     </fieldset>
+
+    <!-- Absences (read only: planned in the calendar or noted in the daily reports) -->
+    @if (absenceGroups(); as groups) {
+      <section class="section" aria-labelledby="child-absences-title">
+        <h3 class="absences-title" id="child-absences-title">Absences</h3>
+        @for (group of groups; track group.title) {
+          <div class="absence-group" [attr.data-group]="group.key">
+            <h4 class="absence-group__title">{{ group.title }}</h4>
+            @for (absence of group.absences; track absence.id) {
+              <p class="absence" [class.absence--report]="absence.source === 'report'">
+                <strong>{{ absenceLabel(absence) }}</strong>
+                {{ formatPeriod(absence.startDate, absence.endDate) }}
+                <span class="hint">({{ absenceSource(absence) }})</span>
+                @if (absence.comment) {
+                  <span class="hint absence__comment">· {{ absence.comment }}</span>
+                }
+              </p>
+            } @empty {
+              <p class="hint">{{ group.empty }}</p>
+            }
+          </div>
+        }
+        <p class="hint">
+          Les absences prévues (congés, maladie…) se déclarent dans le
+          <a routerLink="/calendrier">calendrier</a> ; celles du jour se notent dans les rapports.
+        </p>
+      </section>
+    }
   </div>
 
   <footer class="child-form__footer">

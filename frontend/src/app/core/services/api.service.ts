@@ -25,4 +25,8 @@ export class ApiService {
   put<T>(path: string, body: unknown): Observable<T> {
     return this.http.put<T>(buildUrl(environment.apiUrl, path), body);
   }
+
+  delete(path: string): Observable<void> {
+    return this.http.delete<void>(buildUrl(environment.apiUrl, path));
+  }
 }

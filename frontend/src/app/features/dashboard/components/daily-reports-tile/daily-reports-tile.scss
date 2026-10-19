@@ -9,6 +9,13 @@
   &--error {
     color: var(--color-error);
   }
+
+  &--closed {
+    padding-left: 0.75rem;
+    border-left: 3px solid var(--calendar-closure);
+    color: var(--color-text);
+    font-weight: 600;
+  }
 }
 
 .progress {

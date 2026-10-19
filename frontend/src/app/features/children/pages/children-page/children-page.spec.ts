@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
@@ -38,7 +39,7 @@ describe('ChildrenPage (integration)', () => {
     stubDialog();
     await TestBed.configureTestingModule({
       imports: [ChildrenPage],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     }).compileComponents();
 
     http = TestBed.inject(HttpTestingController);

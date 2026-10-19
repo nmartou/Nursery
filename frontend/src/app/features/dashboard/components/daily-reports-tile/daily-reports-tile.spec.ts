@@ -10,6 +10,7 @@ const STATS_URL = `${environment.apiUrl}/daily-reports/stats`;
 
 const STATS: DailyReportStats = {
   date: '2026-10-16',
+  closure: null,
   total: 5,
   byStatus: { todo: 1, in_progress: 2, complete: 1, absent: 1 },
 };
@@ -73,6 +74,14 @@ describe('DailyReportsTile', () => {
     expect(element.querySelector('.progress__hint--done')?.textContent).toContain(
       'Tous les rapports sont terminés',
     );
+  });
+
+  it('says when the nursery is closed that day', async () => {
+    await respond({ ...STATS, closure: 'Toussaint', total: 0 });
+    expect(element.querySelector('.state--closed')?.textContent).toContain(
+      'Crèche fermée : Toussaint',
+    );
+    expect(element.querySelector('progress')).toBeNull();
   });
 
   it('handles a day without children', async () => {

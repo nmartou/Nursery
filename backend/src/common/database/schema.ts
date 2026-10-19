@@ -222,6 +222,54 @@ export const reportNap = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Calendar: nursery closures and planned absences of the children
+// (French public holidays are computed, see common/utils/public-holidays.util.ts)
+// ---------------------------------------------------------------------------
+
+/** Days the nursery is closed (holidays, bridges...), bounds included. */
+export const closure = pgTable(
+  'closure',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    startDate: date('start_date', { mode: 'string' }).notNull(),
+    endDate: date('end_date', { mode: 'string' }).notNull(),
+    label: varchar('label', { length: 100 }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('idx_closure_period').on(t.startDate, t.endDate),
+    check('ck_closure_period', sql`${t.endDate} >= ${t.startDate}`),
+  ],
+);
+
+/** A child's planned absence (vacation, sickness...), bounds included. */
+export const childAbsence = pgTable(
+  'child_absence',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    childId: uuid('child_id')
+      .notNull()
+      .references(() => child.id, { onDelete: 'cascade' }),
+    startDate: date('start_date', { mode: 'string' }).notNull(),
+    endDate: date('end_date', { mode: 'string' }).notNull(),
+    kind: varchar('kind', { length: 20 })
+      .$type<'vacation' | 'sickness' | 'other'>()
+      .notNull(),
+    comment: varchar('comment', { length: 500 }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index('idx_child_absence_child').on(t.childId),
+    index('idx_child_absence_period').on(t.startDate, t.endDate),
+    check('ck_child_absence_period', sql`${t.endDate} >= ${t.startDate}`),
+    check(
+      'ck_child_absence_kind',
+      sql`${t.kind} in ('vacation', 'sickness', 'other')`,
+    ),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // Relations (used by the relational query API: `db.query.<table>`)
 // ---------------------------------------------------------------------------
 
@@ -233,6 +281,11 @@ export const childRelations = relations(child, ({ one, many }) => ({
   reports: many(dailyReport),
   parents: many(childParent),
   contacts: many(childContact),
+  absences: many(childAbsence),
+}));
+
+export const childAbsenceRelations = relations(childAbsence, ({ one }) => ({
+  child: one(child, { fields: [childAbsence.childId], references: [child.id] }),
 }));
 
 export const parentRelations = relations(parent, ({ many }) => ({

@@ -1,4 +1,5 @@
 import type {
+  PlannedAbsence,
   ReportStatus,
   StoolStatus,
 } from '../models/daily-report.model.js';
@@ -25,6 +26,7 @@ export class DailyReportResponseDto {
   childLastName: string;
   date: string;
   status: ReportStatus;
+  plannedAbsence: PlannedAbsence | null;
   absent: boolean;
   absenceComment: string | null;
   arrivalTime: string | null;

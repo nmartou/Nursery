@@ -51,12 +51,11 @@
   }
 </section>
 
-<dialog
-  #dialog
-  class="modal"
-  aria-labelledby="child-form-title"
-  (cancel)="onCancel($event)"
-  (close)="onClosed()"
+<app-modal-dialog
+  [open]="editing() !== null"
+  labelledBy="child-form-title"
+  (closeRequested)="requestClose()"
+  (closed)="onClosed()"
 >
   @if (editing(); as editing) {
     <app-child-form
@@ -67,4 +66,4 @@
       (cancelForm)="requestClose()"
     />
   }
-</dialog>
+</app-modal-dialog>

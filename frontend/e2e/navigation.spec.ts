@@ -13,12 +13,15 @@ test.describe('Navigation', () => {
     await expect(page.getByRole('link', { name: 'Accueil' })).toHaveClass(/sidebar__link--active/);
   });
 
-  test('place les inscriptions juste avant les rapports du jour', async ({ page }) => {
+  test('place les inscriptions avant les rapports du jour, puis le calendrier', async ({
+    page,
+  }) => {
     await page.goto('/accueil');
     await expect(page.locator('.sidebar__link')).toHaveText([
       /Accueil/,
       /Inscriptions/,
       /Rapports du jour/,
+      /Calendrier/,
     ]);
     await page.getByRole('link', { name: 'Inscriptions' }).click();
     await expect(page).toHaveURL(/\/inscriptions$/);

@@ -1,0 +1,24 @@
+// The dialog opens in front of the page, which is dimmed and blurred.
+.modal {
+  width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: none;
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+  color: inherit;
+  box-shadow: 0 1.5rem 3rem var(--color-backdrop);
+
+  &--medium {
+    max-width: 34rem;
+  }
+
+  &--large {
+    max-width: 56rem;
+  }
+
+  &::backdrop {
+    background: var(--color-backdrop);
+    backdrop-filter: blur(var(--backdrop-blur));
+  }
+}

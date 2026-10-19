@@ -32,6 +32,11 @@
 
   @if (loading()) {
     <p class="page__status">Chargement…</p>
+  } @else if (closure(); as closure) {
+    <div class="closed" role="status">
+      <strong>La crèche est fermée ce jour-là</strong>
+      <span>{{ closure }} : aucun rapport à remplir.</span>
+    </div>
   } @else {
     <div class="reports" [class.reports--open]="selected()">
       <app-report-list

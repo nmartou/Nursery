@@ -62,3 +62,17 @@ describe('computeReportStatus', () => {
     expect(computeReportStatus(report)).toBe('in_progress');
   });
 });
+
+describe('computeReportStatus with a planned absence', () => {
+  const sickness = { kind: 'sickness' as const, comment: 'Otite' };
+
+  it('is "absent" while nothing is entered', () => {
+    expect(computeReportStatus(empty, sickness)).toBe('absent');
+  });
+
+  it('follows what is entered when the child came after all', () => {
+    expect(
+      computeReportStatus({ ...empty, arrivalTime: '09:00' }, sickness),
+    ).toBe('in_progress');
+  });
+});

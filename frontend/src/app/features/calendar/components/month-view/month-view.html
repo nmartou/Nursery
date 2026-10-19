@@ -1,0 +1,28 @@
+<div class="month">
+  <div class="month__row month__row--head" aria-hidden="true">
+    @for (weekday of weekdays; track weekday) {
+      <div class="month__weekday">{{ weekday }}</div>
+    }
+  </div>
+  @for (week of weeks(); track week[0].date) {
+    <div class="month__row">
+      @for (day of week; track day.date) {
+        <div
+          class="day"
+          [class.day--outside]="!day.inMonth"
+          [class.day--weekend]="day.weekend"
+          [class.day--today]="day.today"
+          [attr.data-date]="day.date"
+          [attr.aria-current]="day.today ? 'date' : null"
+        >
+          <span class="day__number">{{ day.dayOfMonth }}</span>
+          <div class="day__events">
+            @for (event of eventsOn(events(), day.date); track event.key) {
+              <app-event-chip [event]="event" (openEvent)="openEvent.emit($event)" />
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

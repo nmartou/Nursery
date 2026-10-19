@@ -25,7 +25,14 @@
           }
         </span>
 
-        <app-enrollment-badge class="row__status" [status]="child.enrollmentStatus" />
+        <span class="row__status">
+          <app-enrollment-badge [status]="child.enrollmentStatus" />
+          @if (child.currentAbsence; as absence) {
+            <span class="row__absent">
+              Absent aujourd'hui{{ absence.kind ? ' · ' + absenceLabel(absence) : '' }}
+            </span>
+          }
+        </span>
 
         <span class="row__parents">
           @for (parent of child.parents; track $index) {

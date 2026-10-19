@@ -1,5 +1,8 @@
 :host {
   display: block;
+
+  // Shown in a modal dialog: never taller than the screen, the body scrolls.
+  max-height: calc(100vh - 2rem);
 }
 
 .child-form {
@@ -213,5 +216,33 @@
 
   &:hover {
     background: var(--color-background);
+  }
+}
+
+.absences-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.absence {
+  margin: 0;
+  font-size: 0.875rem;
+
+  // Angular drops the whitespace between elements: keep the comment apart.
+  &__comment {
+    margin-left: 0.25rem;
+  }
+}
+
+.absence-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  &__title {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
   }
 }

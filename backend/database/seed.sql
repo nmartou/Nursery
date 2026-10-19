@@ -81,4 +81,13 @@ INSERT INTO report_nap (report_id, start_time, end_time) VALUES
   ('d0000000-0000-4000-8000-000000000001', '12:30', '14:45'),
   ('d0000000-0000-4000-8000-000000000002', '10:00', '10:45');
 
+-- Calendar: the nursery closes for Christmas (public holidays are computed)
+INSERT INTO closure (start_date, end_date, label) VALUES
+  ('2026-12-21', '2027-01-01', 'Vacances de Noël');
+
+-- Planned absences: Inès on vacation for All Saints' week, Chloé ill
+INSERT INTO child_absence (child_id, start_date, end_date, kind, comment) VALUES
+  ('c0000000-0000-4000-8000-000000000005', '2026-10-26', '2026-10-30', 'vacation', 'Vacances en famille'),
+  ('c0000000-0000-4000-8000-000000000003', '2026-10-21', '2026-10-22', 'sickness', 'Varicelle');
+
 COMMIT;

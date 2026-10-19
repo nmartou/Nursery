@@ -94,24 +94,3 @@
     color: var(--color-primary-text);
   }
 }
-
-// The form opens in front of the page, which is dimmed and blurred.
-.modal {
-  width: min(56rem, calc(100vw - 2rem));
-  max-height: calc(100vh - 2rem);
-  padding: 0;
-  border: none;
-  border-radius: 0.75rem;
-  background: var(--color-surface);
-  color: inherit;
-  box-shadow: 0 1.5rem 3rem var(--color-backdrop);
-
-  &::backdrop {
-    background: var(--color-backdrop);
-    backdrop-filter: blur(var(--backdrop-blur));
-  }
-
-  app-child-form {
-    max-height: calc(100vh - 2rem);
-  }
-}

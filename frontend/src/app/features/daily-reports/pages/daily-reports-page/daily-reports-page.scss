@@ -106,3 +106,19 @@
     }
   }
 }
+
+// A closed day (public holiday, closure of the nursery) has no report.
+.closed {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--calendar-closure);
+  border-radius: 0.75rem;
+  background: var(--color-surface);
+
+  span {
+    color: var(--color-text-muted);
+  }
+}

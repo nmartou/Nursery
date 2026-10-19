@@ -5,6 +5,7 @@ import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { DailyReportsService } from './daily-reports.service.js';
 
 const report: DailyReport = {
+  plannedAbsence: null,
   ...EMPTY_REPORT_CONTENT,
   id: 'r1',
   childId: 'c1',
@@ -17,6 +18,7 @@ const report: DailyReport = {
 
 function createRepositoryMock() {
   return {
+    closureOn: vi.fn((): Promise<string | null> => Promise.resolve(null)),
     ensureReportsForDate: vi.fn(() => Promise.resolve()),
     findByDate: vi.fn(() => Promise.resolve([report])),
     findById: vi.fn((id: string) =>
@@ -45,7 +47,29 @@ describe('DailyReportsService', () => {
     expect(repository.ensureReportsForDate).toHaveBeenCalledWith('2026-10-16');
     expect(list).toEqual({
       date: '2026-10-16',
+      closure: null,
       reports: [expect.objectContaining({ id: 'r1', status: 'todo' })],
+    });
+  });
+
+  it('creates no report on a closed day and says why', async () => {
+    repository.closureOn.mockResolvedValueOnce('Toussaint');
+    await expect(service.listForDate('2026-11-02')).resolves.toEqual({
+      date: '2026-11-02',
+      closure: 'Toussaint',
+      reports: [],
+    });
+    expect(repository.ensureReportsForDate).not.toHaveBeenCalled();
+  });
+
+  it('shows an empty report as absent on a day of planned absence', async () => {
+    repository.findByDate.mockResolvedValueOnce([
+      { ...report, plannedAbsence: { kind: 'sickness', comment: 'Otite' } },
+    ]);
+    const list = await service.listForDate('2026-10-16');
+    expect(list.reports[0]).toMatchObject({
+      status: 'absent',
+      plannedAbsence: { kind: 'sickness', comment: 'Otite' },
     });
   });
 
@@ -58,6 +82,7 @@ describe('DailyReportsService', () => {
 
     await expect(service.statsForDate('2026-10-16')).resolves.toEqual({
       date: '2026-10-16',
+      closure: null,
       total: 3,
       byStatus: { todo: 1, in_progress: 1, complete: 0, absent: 1 },
     });

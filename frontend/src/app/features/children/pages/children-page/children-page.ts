@@ -1,16 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import {
-  afterNextRender,
-  afterRenderEffect,
   ChangeDetectionStrategy,
   Component,
   computed,
-  type ElementRef,
   inject,
   signal,
   viewChild,
   type OnInit,
 } from '@angular/core';
+import { ModalDialog } from '../../../../shared/components/modal-dialog/modal-dialog';
 import { ChildForm } from '../../components/child-form/child-form';
 import { ChildList } from '../../components/child-list/child-list';
 import { ENROLLMENT_FILTERS } from '../../constants/child.constants';
@@ -40,13 +38,12 @@ function normalize(text: string): string {
 @Component({
   selector: 'app-children-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ChildList, ChildForm],
+  imports: [ChildList, ChildForm, ModalDialog],
   templateUrl: './children-page.html',
   styleUrl: './children-page.scss',
 })
 export class ChildrenPage implements OnInit {
   private readonly childrenService = inject(ChildrenService);
-  private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
   private readonly childForm = viewChild(ChildForm);
 
   protected readonly list = signal<ChildListModel | null>(null);
@@ -81,27 +78,6 @@ export class ChildrenPage implements OnInit {
     );
   });
 
-  constructor() {
-    // The dialog follows the `editing` state (opened modal, so the page behind is inert).
-    // After rendering, so that the form is in the DOM when it gets the focus.
-    afterRenderEffect(() => {
-      const dialog = this.dialog().nativeElement;
-      if (this.editing() && !dialog.open) {
-        dialog.showModal();
-        // Start on the first field rather than on the close button.
-        dialog.querySelector<HTMLInputElement>('input')?.focus();
-      } else if (!this.editing() && dialog.open) {
-        dialog.close();
-      }
-    });
-
-    // A click on the dimmed backdrop closes the dialog. Mouse only: keyboard users
-    // have Escape (the `cancel` event), hence a listener instead of a template binding.
-    afterNextRender(() => {
-      this.dialog().nativeElement.addEventListener('click', (event) => this.onDialogClick(event));
-    });
-  }
-
   ngOnInit(): void {
     this.load();
   }
@@ -124,19 +100,6 @@ export class ChildrenPage implements OnInit {
   protected requestClose(): void {
     if (!this.childForm()?.isDirty() || window.confirm(UNSAVED_CHANGES_MESSAGE)) {
       this.editing.set(null);
-    }
-  }
-
-  /** Escape key: the dialog only closes if no change would be lost. */
-  protected onCancel(event: Event): void {
-    event.preventDefault();
-    this.requestClose();
-  }
-
-  /** The click landed on the dialog element itself, i.e. on its backdrop. */
-  private onDialogClick(event: MouseEvent): void {
-    if (event.target === this.dialog().nativeElement) {
-      this.requestClose();
     }
   }
 

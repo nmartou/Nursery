@@ -1,6 +1,7 @@
 import {
   isWeekday,
   mostRecentWeekday,
+  nextWeekday,
   toHourMinute,
   toIsoDate,
 } from './date.util.js';
@@ -23,5 +24,13 @@ describe('date utils', () => {
   it('falls back to the previous Friday on weekends', () => {
     expect(mostRecentWeekday(new Date(2026, 9, 18))).toBe('2026-10-16');
     expect(mostRecentWeekday(new Date(2026, 9, 14))).toBe('2026-10-14');
+  });
+});
+
+describe('nextWeekday', () => {
+  it('skips the weekend', () => {
+    expect(nextWeekday('2026-10-15')).toBe('2026-10-16');
+    expect(nextWeekday('2026-10-16')).toBe('2026-10-19');
+    expect(nextWeekday('2026-10-17')).toBe('2026-10-19');
   });
 });

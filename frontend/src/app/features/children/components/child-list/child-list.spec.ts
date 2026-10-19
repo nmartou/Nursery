@@ -44,6 +44,26 @@ describe('ChildList', () => {
     expect(emitted).toEqual(['c3']);
   });
 
+  it('flags the children absent today, with the reason when it is known', async () => {
+    const today = { startDate: TODAY, endDate: TODAY, comment: null };
+    fixture.componentRef.setInput('children', [
+      {
+        ...CHILD_SUMMARIES[0],
+        currentAbsence: { ...today, id: 'a1', kind: 'sickness', source: 'calendar' },
+      },
+      {
+        ...CHILD_SUMMARIES[1],
+        currentAbsence: { ...today, id: 'report-r1', kind: null, source: 'report' },
+      },
+    ]);
+    await fixture.whenStable();
+    const [lea, hugo] = rows();
+    expect(lea.querySelector('.row__absent')?.textContent?.trim()).toBe(
+      "Absent aujourd'hui · Maladie",
+    );
+    expect(hugo.querySelector('.row__absent')?.textContent?.trim()).toBe("Absent aujourd'hui");
+  });
+
   it('says so when no child matches', async () => {
     fixture.componentRef.setInput('children', []);
     await fixture.whenStable();

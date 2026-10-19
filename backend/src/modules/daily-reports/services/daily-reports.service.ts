@@ -19,17 +19,25 @@ import { DailyReportRepository } from '../repositories/daily-report.repository.j
 export class DailyReportsService {
   constructor(private readonly repository: DailyReportRepository) {}
 
-  /** Lists the reports of a weekday, creating the missing ones for every child. */
+  /**
+   * Lists the reports of a weekday, creating the missing ones for every child
+   * enrolled that day. A closed day (public holiday, closure) has no reports.
+   */
   async listForDate(
     date: string = mostRecentWeekday(),
   ): Promise<DailyReportListResponseDto> {
     if (!isWeekday(date)) {
       throw new BadRequestException('La crèche est fermée le week-end.');
     }
+    const closure = await this.repository.closureOn(date);
+    if (closure) {
+      return { date, closure, reports: [] };
+    }
     await this.repository.ensureReportsForDate(date);
     const reports = await this.repository.findByDate(date);
     return {
       date,
+      closure: null,
       reports: reports.map((report) => DailyReportMapper.toSummaryDto(report)),
     };
   }
@@ -46,7 +54,12 @@ export class DailyReportsService {
     for (const report of list.reports) {
       byStatus[report.status]++;
     }
-    return { date: list.date, total: list.reports.length, byStatus };
+    return {
+      date: list.date,
+      closure: list.closure,
+      total: list.reports.length,
+      byStatus,
+    };
   }
 
   async getById(id: string): Promise<DailyReportResponseDto> {

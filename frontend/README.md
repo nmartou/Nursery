@@ -72,6 +72,10 @@ src/app/
 │   │   ├── models/           # modèles de la fonctionnalité
 │   │   ├── pages/            # composants routés (grille de tuiles)
 │   │   └── services/         # accès aux données des tuiles
+│   ├── calendar/             # calendrier (/calendrier)
+│   │   ├── components/       # vue mois, agenda (mobile), pastilles, formulaires fermeture et absence
+│   │   ├── utils/            # grille du mois, textes des événements
+│   │   └── …                 # constants, models, pages, services, testing
 │   ├── children/             # inscriptions des enfants (/inscriptions)
 │   │   ├── components/       # liste, formulaire (dans une modale), badge d'inscription
 │   │   ├── constants/        # libellés (liens de parenté, statuts), règles de saisie
@@ -89,7 +93,8 @@ src/app/
 │       ├── testing/          # données de test partagées entre les specs
 │       └── utils/            # conversion formulaire <-> payload API
 └── shared/                   # éléments réutilisables
-    ├── components/           # composants génériques
+    ├── components/           # composants génériques (ModalDialog : <dialog> modal)
+    ├── styles/               # partials SCSS partagés (_forms.scss pour les formulaires en modale)
     └── utils/                # fonctions utilitaires
 ```
 
@@ -97,13 +102,20 @@ src/app/
 
 - **Tableau de bord** (`/accueil`) : une grille de tuiles indépendantes, qui chargent chacune leurs données. Pour l'instant, une seule tuile, « Rapports du jour » : nombre de rapports terminés (complets ou absents) sur le total, barre de progression, répartition par statut et lien vers les rapports.
   - Pour ajouter une tuile : créer un composant dans `features/dashboard/components/` qui s'appuie sur `DashboardTile` (titre, sous-titre, contenu et `<div tileFooter>`), ajouter sa méthode dans `DashboardService` (un endpoint du domaine concerné), puis le placer dans la grille de `dashboard-page.html`.
+- **Calendrier** (`/calendrier`) : le mois en grille du lundi au dimanche (sur smartphone, la liste des jours qui ont des événements), avec la navigation entre les mois, un bouton « Aujourd'hui » et des filtres (fermetures, absences, arrivées et départs). On y voit :
+  - les jours fériés et les fermetures de la crèche ;
+  - les absences des enfants, prévues (congés, maladie, autre) ou notées « Absent » dans les rapports du jour ;
+  - les arrivées et départs, issus des dates d'inscription.
+
+  « + Fermeture » et « + Absence », ou un clic sur une fermeture ou une absence, ouvrent son formulaire dans une modale. On peut y modifier ou supprimer l'élément. Une absence doit rester dans la période d'inscription de l'enfant et ne pas en chevaucher une autre. Effets ailleurs : un jour fermé affiche « La crèche est fermée » dans les rapports et le tableau de bord ; une absence prévue rend le rapport « Absent » (avec la raison) tant que rien n'y est saisi, et apparaît dans la liste et la fiche de l'enfant.
+
 - **Inscriptions** (`/inscriptions`) : la liste des enfants (âge, période d'inscription, statut « Inscrit / À venir / Terminé », parents et nombre d'autres contacts), avec des filtres par statut et une recherche par nom (sans tenir compte des accents). « Inscrire un enfant », ou un clic sur une ligne, ouvre le formulaire dans une modale (`<dialog>`) : la page derrière est assombrie, floutée et inactive. Le formulaire se ferme avec Échap, Annuler ou un clic sur le fond, avec une confirmation s'il contient des modifications. Il comprend :
   - l'enfant (prénom, nom, date de naissance) ;
   - la période d'inscription (premier jour obligatoire, dernier jour facultatif) ;
   - les parents responsables (1 à 4 : lien, nom, e-mail, téléphone) ;
   - les autres contacts à appeler (nom, lien, téléphone).
 
-  Un enfant n'apparaît dans les rapports du jour que pendant sa période d'inscription.
+  Un enfant n'apparaît dans les rapports du jour que pendant sa période d'inscription. La fiche montre aussi ses absences, en cours, à venir et passées : celles prévues au calendrier et celles notées « Absent » dans les rapports (les jours consécutifs sont regroupés). La liste signale les enfants absents aujourd'hui.
 
 - **Rapports du jour** (`/rapports`) : la liste des enfants du jour (jours de semaine uniquement), avec un indicateur par ligne (à remplir, à compléter, complet, absent) et l'heure de dernière modification. Au clic, la liste se décale à gauche et le formulaire s'ouvre. Il contient la présence (avec un bouton Absent), les repas (en g), les biberons (heure + ml), la sieste, les selles (commentaire obligatoire si « Autre ») et la transmission aux parents. Chaque formulaire s'enregistre avec son bouton.
 

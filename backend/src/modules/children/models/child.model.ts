@@ -21,6 +21,38 @@ export interface ChildContact {
   phone: string;
 }
 
+export type AbsenceKind = 'vacation' | 'sickness' | 'other';
+
+/** An absence declared in the calendar (vacation, sickness...), bounds included. */
+export interface ChildAbsence {
+  id: string;
+  startDate: string;
+  endDate: string;
+  kind: AbsenceKind;
+  comment: string | null;
+}
+
+/** A day the child was marked absent in its daily report. */
+export interface ReportedAbsenceDay {
+  reportId: string;
+  date: string;
+  comment: string | null;
+}
+
+/**
+ * One entry of a child's absence history: planned in the calendar, or noted in
+ * the daily reports (consecutive weekdays grouped into one period).
+ */
+export interface AbsenceEntry {
+  id: string;
+  startDate: string;
+  endDate: string;
+  /** Null for absences noted in the reports (the reason is not known). */
+  kind: AbsenceKind | null;
+  comment: string | null;
+  source: 'calendar' | 'report';
+}
+
 export interface Child {
   id: string;
   firstName: string;
@@ -34,6 +66,10 @@ export interface Child {
   /** Ordered: the first parent is the main contact. */
   parents: ChildParent[];
   contacts: ChildContact[];
+  /** Every absence planned in the calendar, by start date. */
+  absences: ChildAbsence[];
+  /** Every day marked absent in a daily report, by date. */
+  reportedAbsences: ReportedAbsenceDay[];
   createdAt: Date;
   updatedAt: Date;
 }

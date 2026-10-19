@@ -24,6 +24,15 @@
   --enrollment-upcoming: #3b6fd6;
   --enrollment-ended: #8a91a3;
 
+  /* Calendar events */
+  --calendar-closure: #8a5a00;
+  --calendar-holiday: #9b2c6f;
+  --calendar-vacation: #3b6fd6;
+  --calendar-sickness: #d64545;
+  --calendar-absence-other: #6b5bd1;
+  --calendar-arrival: #2e9d5b;
+  --calendar-departure: #5b6275;
+
   /* Behind modal dialogs: the page is dimmed and blurred. */
   --color-backdrop: rgb(20 26 45 / 45%);
   --backdrop-blur: 3px;

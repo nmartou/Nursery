@@ -16,7 +16,8 @@ export class DailyReportMapper {
       childFirstName: report.childFirstName,
       childLastName: report.childLastName,
       date: report.date,
-      status: computeReportStatus(report),
+      status: computeReportStatus(report, report.plannedAbsence),
+      plannedAbsence: report.plannedAbsence,
       absent: report.absent,
       absenceComment: report.absenceComment,
       arrivalTime: report.arrivalTime,
@@ -40,7 +41,8 @@ export class DailyReportMapper {
       childId: report.childId,
       childFirstName: report.childFirstName,
       childLastName: report.childLastName,
-      status: computeReportStatus(report),
+      status: computeReportStatus(report, report.plannedAbsence),
+      plannedAbsence: report.plannedAbsence,
       updatedAt: toIsoString(report.updatedAt),
     };
   }

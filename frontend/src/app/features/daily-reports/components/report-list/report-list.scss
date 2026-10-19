@@ -64,6 +64,13 @@
     grid-area: badge;
   }
 
+  &__planned {
+    grid-column: 1 / -1;
+    color: var(--calendar-sickness);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
   &__time {
     grid-area: time;
     font-size: 0.75rem;

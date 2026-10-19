@@ -33,6 +33,8 @@ export class DailyReportsPage implements OnInit {
 
   protected readonly date = signal<string | null>(null);
   protected readonly reports = signal<DailyReportSummary[]>([]);
+  /** Why the nursery is closed on the chosen day, if it is. */
+  protected readonly closure = signal<string | null>(null);
   protected readonly selected = signal<DailyReport | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
@@ -129,6 +131,7 @@ export class DailyReportsPage implements OnInit {
     this.reportsService.getByDate(date).subscribe({
       next: (list) => {
         this.date.set(list.date);
+        this.closure.set(list.closure);
         this.reports.set(list.reports);
         this.loading.set(false);
       },

@@ -19,6 +19,16 @@ export class ContactResponseDto {
   phone: string;
 }
 
+export class ChildAbsenceResponseDto {
+  id: string;
+  startDate: string;
+  endDate: string;
+  /** Null for absences noted in the daily reports. */
+  kind: 'vacation' | 'sickness' | 'other' | null;
+  comment: string | null;
+  source: 'calendar' | 'report';
+}
+
 /** A child with everything the registration form needs. */
 export class ChildResponseDto {
   id: string;
@@ -30,6 +40,8 @@ export class ChildResponseDto {
   enrollmentStatus: EnrollmentStatus;
   parents: ParentResponseDto[];
   contacts: ContactResponseDto[];
+  /** Every absence, most recent first: planned in the calendar or noted in the reports. */
+  absences: ChildAbsenceResponseDto[];
   createdAt: string;
   updatedAt: string;
 }

@@ -4,7 +4,9 @@ import { DRIZZLE } from '../../../common/constants/injection-tokens.js';
 import type { Database } from '../../../common/database/database.module.js';
 import {
   child,
+  childAbsence,
   childContact,
+  dailyReport,
   childParent,
   nursery,
   parent,
@@ -17,7 +19,10 @@ import type {
 
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
 
-/** Parents and contacts, loaded with the child in one relational query. */
+/**
+ * Parents, contacts, planned absences and the reports marked absent, loaded
+ * with the child in one relational query.
+ */
 const WITH_RELATIONS = {
   parents: {
     columns: { relationship: true },
@@ -43,6 +48,21 @@ const WITH_RELATIONS = {
     },
     orderBy: childContact.position,
   },
+  absences: {
+    columns: {
+      id: true,
+      startDate: true,
+      endDate: true,
+      kind: true,
+      comment: true,
+    },
+    orderBy: childAbsence.startDate,
+  },
+  reports: {
+    columns: { id: true, reportDate: true, absenceComment: true },
+    where: eq(dailyReport.absent, true),
+    orderBy: dailyReport.reportDate,
+  },
 } as const;
 
 /** Shape returned by the relational queries using `WITH_RELATIONS`. */
@@ -57,6 +77,14 @@ type ChildWithRelations = typeof child.$inferSelect & {
   contacts: Pick<
     typeof childContact.$inferSelect,
     'firstName' | 'lastName' | 'relationship' | 'phone'
+  >[];
+  absences: Pick<
+    typeof childAbsence.$inferSelect,
+    'id' | 'startDate' | 'endDate' | 'kind' | 'comment'
+  >[];
+  reports: Pick<
+    typeof dailyReport.$inferSelect,
+    'id' | 'reportDate' | 'absenceComment'
   >[];
 };
 
@@ -219,6 +247,12 @@ export class ChildRepository {
         relationship: relationship as ParentRelationship,
       })),
       contacts: row.contacts,
+      absences: row.absences,
+      reportedAbsences: row.reports.map((report) => ({
+        reportId: report.id,
+        date: report.reportDate,
+        comment: report.absenceComment,
+      })),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };

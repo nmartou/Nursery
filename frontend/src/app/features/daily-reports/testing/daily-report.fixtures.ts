@@ -9,6 +9,7 @@ export const REPORT_SUMMARIES: DailyReportSummary[] = [
     childFirstName: 'Léa',
     childLastName: 'Martin',
     status: 'complete',
+    plannedAbsence: null,
     updatedAt: '2026-10-16T15:30:00.000Z',
   },
   {
@@ -17,6 +18,7 @@ export const REPORT_SUMMARIES: DailyReportSummary[] = [
     childFirstName: 'Hugo',
     childLastName: 'Bernard',
     status: 'in_progress',
+    plannedAbsence: null,
     updatedAt: '2026-10-16T08:00:00.000Z',
   },
   {
@@ -25,6 +27,7 @@ export const REPORT_SUMMARIES: DailyReportSummary[] = [
     childFirstName: 'Chloé',
     childLastName: 'Dubois',
     status: 'todo',
+    plannedAbsence: null,
     updatedAt: '2026-10-16T06:00:00.000Z',
   },
 ];
@@ -37,6 +40,7 @@ export function buildReport(overrides: Partial<DailyReport> = {}): DailyReport {
     childLastName: 'Bernard',
     date: '2026-10-16',
     status: 'in_progress',
+    plannedAbsence: null,
     updatedAt: '2026-10-16T08:00:00.000Z',
     absent: false,
     absenceComment: null,

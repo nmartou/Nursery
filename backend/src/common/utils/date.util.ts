@@ -29,3 +29,12 @@ export function mostRecentWeekday(now: Date = new Date()): string {
   }
   return toIsoDate(date);
 }
+
+/** The weekday following a `YYYY-MM-DD` date (Friday -> Monday). */
+export function nextWeekday(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  do {
+    date.setUTCDate(date.getUTCDate() + 1);
+  } while (!isWeekday(date.toISOString().slice(0, 10)));
+  return date.toISOString().slice(0, 10);
+}

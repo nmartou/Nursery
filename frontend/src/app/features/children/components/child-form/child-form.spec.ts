@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import type { ChildPayload } from '../../models/child.model';
 import { buildChild } from '../../testing/child.fixtures';
@@ -14,7 +15,10 @@ describe('ChildForm', () => {
   }
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({ imports: [ChildForm] }).compileComponents();
+    await TestBed.configureTestingModule({
+      imports: [ChildForm],
+      providers: [provideRouter([])],
+    }).compileComponents();
     fixture = TestBed.createComponent(ChildForm);
     element = fixture.nativeElement as HTMLElement;
     saved = [];
@@ -185,6 +189,59 @@ describe('ChildForm', () => {
     await fixture.whenStable();
     await submit();
     expect(saved).toHaveLength(1);
+  });
+
+  it('shows the past, current and upcoming absences of the child', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 9, 19, 10, 0)); // Monday 19 October 2026
+    await render(
+      buildChild({
+        absences: [
+          {
+            id: 'a2',
+            startDate: '2026-12-21',
+            endDate: '2026-12-24',
+            kind: 'vacation',
+            comment: null,
+            source: 'calendar',
+          },
+          {
+            id: 'report-r1',
+            startDate: '2026-10-19',
+            endDate: '2026-10-19',
+            kind: null,
+            comment: 'Fièvre',
+            source: 'report',
+          },
+          {
+            id: 'report-r0',
+            startDate: '2026-10-14',
+            endDate: '2026-10-16',
+            kind: null,
+            comment: null,
+            source: 'report',
+          },
+        ],
+      }),
+    );
+    const group = (key: string) =>
+      element.querySelector(`[data-group="${key}"]`)?.textContent?.replace(/\s+/g, ' ');
+    expect(group('current')).toContain('Absent le 19/10/2026 (noté dans les rapports)');
+    expect(element.querySelector('[data-group="current"] .absence__comment')?.textContent).toBe(
+      '· Fièvre',
+    );
+    expect(group('upcoming')).toContain('Congés du 21/12/2026 au 24/12/2026 (prévu au calendrier)');
+    expect(group('past')).toContain('Absent du 14/10/2026 au 16/10/2026 (noté dans les rapports)');
+    vi.useRealTimers();
+  });
+
+  it('says when a group has no absence, and shows nothing for a new child', async () => {
+    await render(buildChild({ absences: [] }));
+    expect(element.querySelector('[data-group="past"]')?.textContent).toContain(
+      'Aucune absence passée.',
+    );
+    await render(null);
+    expect(element.querySelector('[data-group]')).toBeNull();
   });
 
   it('loads an existing child for edition', async () => {

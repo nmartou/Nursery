@@ -51,6 +51,8 @@ export const CHILD: Child = {
       phone: '06 11 22 33 44',
     },
   ],
+  absences: [],
+  reportedAbsences: [],
   createdAt: new Date('2026-08-20T08:00:00Z'),
   updatedAt: new Date('2026-08-21T08:00:00Z'),
 };

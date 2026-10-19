@@ -132,6 +132,7 @@ describe('Daily reports API (e2e)', () => {
       .expect(200);
     expect(res.body).toEqual({
       date: '2026-10-16',
+      closure: null,
       total: 4,
       byStatus: { todo: 3, in_progress: 0, complete: 1, absent: 0 },
     });

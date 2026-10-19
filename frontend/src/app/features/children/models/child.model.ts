@@ -20,6 +20,18 @@ export interface ChildContact {
   phone: string;
 }
 
+/** An absence declared in the calendar (vacation, sickness...), bounds included. */
+export interface ChildAbsence {
+  id: string;
+  startDate: string;
+  endDate: string;
+  /** Null for absences noted in the daily reports (no reason known). */
+  kind: 'vacation' | 'sickness' | 'other' | null;
+  comment: string | null;
+  /** Planned in the calendar, or noted "Absent" in the daily reports. */
+  source: 'calendar' | 'report';
+}
+
 /** `GET /children/:id`, also returned after saving. */
 export interface Child {
   id: string;
@@ -34,6 +46,8 @@ export interface Child {
   enrollmentStatus: EnrollmentStatus;
   parents: ChildParent[];
   contacts: ChildContact[];
+  /** Every absence, most recent first: planned in the calendar or noted in the reports. */
+  absences: ChildAbsence[];
   createdAt: string;
   updatedAt: string;
 }
@@ -49,6 +63,8 @@ export interface ChildSummary {
   enrollmentStatus: EnrollmentStatus;
   parents: Pick<ChildParent, 'firstName' | 'lastName' | 'relationship' | 'phone'>[];
   contactCount: number;
+  /** The absence covering today, if any. */
+  currentAbsence: ChildAbsence | null;
   updatedAt: string;
 }
 

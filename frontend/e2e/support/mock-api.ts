@@ -213,6 +213,14 @@ function isWeekday(isoDate: string): boolean {
   return day !== 0 && day !== 6;
 }
 
+function nextWeekday(isoDate: string): string {
+  const date = new Date(`${isoDate}T00:00:00Z`);
+  do {
+    date.setUTCDate(date.getUTCDate() + 1);
+  } while (!isWeekday(date.toISOString().slice(0, 10)));
+  return date.toISOString().slice(0, 10);
+}
+
 function isEnrolledOn(child: MockChild, date: string): boolean {
   return (
     child.enrollmentStart <= date && (child.enrollmentEnd === null || child.enrollmentEnd >= date)
@@ -235,9 +243,41 @@ function byName(
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+  'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
+
+type AbsenceKind = 'vacation' | 'sickness' | 'other';
+
+export interface MockClosure {
+  id: string;
+  startDate: string;
+  endDate: string;
+  label: string;
+}
+
+export interface MockAbsence {
+  id: string;
+  childId: string;
+  startDate: string;
+  endDate: string;
+  kind: AbsenceKind;
+  comment: string | null;
+}
+
+/** The French public holidays the scenarios go through (the API computes them). */
+const PUBLIC_HOLIDAYS: Record<string, string> = {
+  '2026-07-14': 'Fête nationale',
+  '2026-08-15': 'Assomption',
+  '2026-11-01': 'Toussaint',
+  '2026-11-11': 'Armistice 1918',
+  '2026-12-25': 'Noël',
+  '2027-01-01': "Jour de l'an",
+};
+
+function overlaps(item: { startDate: string; endDate: string }, from: string, to: string): boolean {
+  return item.startDate <= to && item.endDate >= from;
+}
 
 export class MockApi {
   readonly requests: RecordedRequest[] = [];
@@ -245,7 +285,12 @@ export class MockApi {
   now: () => Date = () => new Date();
   private readonly children: MockChild[] = seedChildren();
   private readonly reports: MockReport[] = [];
+  private readonly closures: MockClosure[] = [
+    { id: 'k1', startDate: '2026-11-09', endDate: '2026-11-10', label: 'Pont du 11 novembre' },
+  ];
+  private readonly absences: MockAbsence[] = [];
   private nextChildId = 100;
+  private nextId = 1;
 
   private constructor() {
     this.createReports(SEED_DATE);
@@ -260,9 +305,9 @@ export class MockApi {
     return api;
   }
 
-  /** Requests that changed data (PUT and POST), in call order. */
+  /** Requests that changed data (POST, PUT, DELETE), in call order. */
   saves(): RecordedRequest[] {
-    return this.requests.filter((request) => request.method === 'PUT' || request.method === 'POST');
+    return this.requests.filter((request) => ['PUT', 'POST', 'DELETE'].includes(request.method));
   }
 
   report(firstName: string, date = SEED_DATE): MockReport {
@@ -287,14 +332,28 @@ export class MockApi {
     if (path === '/children' || path.startsWith('/children/')) {
       return this.handleChildren(route, method, path, body as Partial<MockChild> | null);
     }
+    if (path === '/calendar' && method === 'GET') {
+      const from = url.searchParams.get('from') ?? '';
+      const to = url.searchParams.get('to') ?? '';
+      return this.json(route, 200, { from, to, events: this.calendarEvents(from, to) });
+    }
+    if (path.startsWith('/closures')) {
+      return this.handleClosures(route, method, path, body as Omit<MockClosure, 'id'> | null);
+    }
+    if (path.startsWith('/absences')) {
+      return this.handleAbsences(route, method, path, body as Omit<MockAbsence, 'id'> | null);
+    }
 
     if (method === 'GET' && (path === '/daily-reports' || path === '/daily-reports/stats')) {
       const date = url.searchParams.get('date') ?? SEED_DATE;
       if (!isWeekday(date)) {
         return this.json(route, 400, { message: 'La crèche est fermée le week-end.' });
       }
-      this.createReports(date);
-      const reports = this.reportsOn(date);
+      const closure = this.closureOn(date);
+      if (!closure) {
+        this.createReports(date);
+      }
+      const reports = closure ? [] : this.reportsOn(date).map((r) => this.withPlannedAbsence(r));
       if (path === '/daily-reports/stats') {
         const byStatus: Record<ReportStatus, number> = {
           todo: 0,
@@ -305,17 +364,19 @@ export class MockApi {
         for (const r of reports) {
           byStatus[r.status]++;
         }
-        return this.json(route, 200, { date, total: reports.length, byStatus });
+        return this.json(route, 200, { date, closure, total: reports.length, byStatus });
       }
       return this.json(route, 200, {
         date,
+        closure,
         reports: reports.map(
-          ({ id, childId, childFirstName, childLastName, status, updatedAt }) => ({
+          ({ id, childId, childFirstName, childLastName, status, plannedAbsence, updatedAt }) => ({
             id,
             childId,
             childFirstName,
             childLastName,
             status,
+            plannedAbsence,
             updatedAt,
           }),
         ),
@@ -328,12 +389,12 @@ export class MockApi {
       return this.json(route, 404, { message: 'Not found' });
     }
     if (report && method === 'GET') {
-      return this.json(route, 200, this.withChildName(report));
+      return this.json(route, 200, this.withPlannedAbsence(this.withChildName(report)));
     }
     if (report && method === 'PUT') {
       Object.assign(report, body, { updatedAt: this.now().toISOString() });
       report.status = computeStatus(report);
-      return this.json(route, 200, this.withChildName(report));
+      return this.json(route, 200, this.withPlannedAbsence(this.withChildName(report)));
     }
 
     return this.json(route, 404, { message: `Unhandled ${method} ${path}` });
@@ -361,6 +422,8 @@ export class MockApi {
           phone,
         })),
         contactCount: child.contacts.length,
+        currentAbsence:
+          this.absenceHistory(child.id).find((a) => overlaps(a, TODAY, TODAY)) ?? null,
         updatedAt: child.updatedAt,
       }));
       return this.json(route, 200, { today: TODAY, children });
@@ -393,7 +456,217 @@ export class MockApi {
   }
 
   private childDto(child: MockChild) {
-    return { ...child, enrollmentStatus: enrollmentStatus(child) };
+    return {
+      ...child,
+      enrollmentStatus: enrollmentStatus(child),
+      absences: this.absenceHistory(child.id),
+    };
+  }
+
+  /**
+   * Like the API: planned absences plus the days marked absent in the reports
+   * (consecutive weekdays grouped, days covered by a planned absence left out),
+   * most recent first.
+   */
+  private absenceHistory(childId: string) {
+    const planned = this.absences
+      .filter((a) => a.childId === childId)
+      .map((a) => ({ ...a, source: 'calendar' as const }));
+    const periods: {
+      id: string;
+      startDate: string;
+      endDate: string;
+      kind: null;
+      comment: string | null;
+      source: 'report';
+    }[] = [];
+    const days = this.reports
+      .filter((r) => r.childId === childId && r.absent)
+      .filter((r) => !planned.some((a) => overlaps(a, r.date, r.date)))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    for (const day of days) {
+      const last = periods.at(-1);
+      if (last && nextWeekday(last.endDate) === day.date) {
+        last.endDate = day.date;
+        last.comment ??= day.absenceComment;
+      } else {
+        periods.push({
+          id: `report-${day.id}`,
+          startDate: day.date,
+          endDate: day.date,
+          kind: null,
+          comment: day.absenceComment,
+          source: 'report',
+        });
+      }
+    }
+    return [...planned, ...periods].sort((a, b) => b.startDate.localeCompare(a.startDate));
+  }
+
+  // --- Calendar ---------------------------------------------------------------
+
+  private closureOn(date: string): string | null {
+    return (
+      PUBLIC_HOLIDAYS[date] ?? this.closures.find((c) => overlaps(c, date, date))?.label ?? null
+    );
+  }
+
+  /** The report as listed: an empty report on a day of planned absence counts as absent. */
+  private withPlannedAbsence(report: MockReport): MockReport & {
+    plannedAbsence: { kind: AbsenceKind; comment: string | null } | null;
+  } {
+    const absence = this.absences.find(
+      (a) => a.childId === report.childId && overlaps(a, report.date, report.date),
+    );
+    const plannedAbsence = absence ? { kind: absence.kind, comment: absence.comment } : null;
+    const status = computeStatus(report);
+    return {
+      ...report,
+      status: status === 'todo' && plannedAbsence ? 'absent' : status,
+      plannedAbsence,
+    };
+  }
+
+  private calendarEvents(from: string, to: string) {
+    const base = { sourceId: null, childId: null, absenceKind: null, comment: null };
+    const name = (childId: string) => {
+      const child = this.children.find((c) => c.id === childId)!;
+      return `${child.firstName} ${child.lastName}`;
+    };
+    const events = [
+      ...Object.entries(PUBLIC_HOLIDAYS)
+        .filter(([date]) => date >= from && date <= to)
+        .map(([date, label]) => ({
+          ...base,
+          key: `holiday-${date}`,
+          type: 'public_holiday',
+          startDate: date,
+          endDate: date,
+          label,
+        })),
+      ...this.closures
+        .filter((c) => overlaps(c, from, to))
+        .map((c) => ({ ...base, ...c, key: `closure-${c.id}`, type: 'closure', sourceId: c.id })),
+      ...this.absences
+        .filter((a) => overlaps(a, from, to))
+        .map((a) => ({
+          key: `absence-${a.id}`,
+          type: 'absence',
+          startDate: a.startDate,
+          endDate: a.endDate,
+          label: name(a.childId),
+          sourceId: a.id,
+          childId: a.childId,
+          absenceKind: a.kind,
+          comment: a.comment,
+        })),
+      // Children marked absent in a report, unless a planned absence covers the day.
+      ...this.reports
+        .filter(
+          (r) =>
+            r.absent &&
+            r.date >= from &&
+            r.date <= to &&
+            !this.absences.some((a) => a.childId === r.childId && overlaps(a, r.date, r.date)),
+        )
+        .map((r) => ({
+          ...base,
+          key: `reported_absence-${r.id}`,
+          type: 'reported_absence',
+          startDate: r.date,
+          endDate: r.date,
+          label: name(r.childId),
+          childId: r.childId,
+          comment: r.absenceComment,
+        })),
+      ...this.children.flatMap((child) =>
+        (
+          [
+            ['enrollment_start', child.enrollmentStart],
+            ['enrollment_end', child.enrollmentEnd],
+          ] as const
+        )
+          .filter(([, date]) => date !== null && date >= from && date <= to)
+          .map(([type, date]) => ({
+            ...base,
+            key: `${type}-${child.id}`,
+            type,
+            startDate: date!,
+            endDate: date!,
+            label: name(child.id),
+            childId: child.id,
+          })),
+      ),
+    ];
+    return events.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  }
+
+  private handleClosures(
+    route: Route,
+    method: string,
+    path: string,
+    body: Omit<MockClosure, 'id'> | null,
+  ): Promise<void> {
+    if (method === 'POST' && body) {
+      const closure = { ...body, id: `k${100 + this.nextId++}` };
+      this.closures.push(closure);
+      return this.json(route, 201, closure);
+    }
+    const index = this.closures.findIndex((c) => c.id === path.replace('/closures/', ''));
+    if (index < 0) {
+      return this.json(route, 404, { message: 'Not found' });
+    }
+    if (method === 'PUT' && body) {
+      Object.assign(this.closures[index], body);
+      return this.json(route, 200, this.closures[index]);
+    }
+    if (method === 'DELETE') {
+      this.closures.splice(index, 1);
+      return route.fulfill({ status: 204, headers: CORS_HEADERS });
+    }
+    return this.json(route, 404, { message: `Unhandled ${method} ${path}` });
+  }
+
+  private handleAbsences(
+    route: Route,
+    method: string,
+    path: string,
+    body: Omit<MockAbsence, 'id'> | null,
+  ): Promise<void> {
+    const id = path.replace(/^\/absences\/?/, '');
+    if (method === 'DELETE') {
+      const index = this.absences.findIndex((a) => a.id === id);
+      if (index < 0) {
+        return this.json(route, 404, { message: 'Not found' });
+      }
+      this.absences.splice(index, 1);
+      return route.fulfill({ status: 204, headers: CORS_HEADERS });
+    }
+    if (!body) {
+      return this.json(route, 400, { message: 'Bad Request' });
+    }
+    // Same rules as the API: no overlap with another absence of the child.
+    const overlapping = this.absences.some(
+      (a) => a.childId === body.childId && a.id !== id && overlaps(a, body.startDate, body.endDate),
+    );
+    if (overlapping) {
+      return this.json(route, 409, {
+        message: { message: 'Une absence est déjà prévue pour cet enfant sur cette période.' },
+      });
+    }
+    const child = this.children.find((c) => c.id === body.childId)!;
+    const names = { childFirstName: child.firstName, childLastName: child.lastName };
+    if (method === 'POST') {
+      const absence = { ...body, id: `a${100 + this.nextId++}` };
+      this.absences.push(absence);
+      return this.json(route, 201, { ...absence, ...names });
+    }
+    const absence = this.absences.find((a) => a.id === id);
+    if (method === 'PUT' && absence) {
+      Object.assign(absence, body);
+      return this.json(route, 200, { ...absence, ...names });
+    }
+    return this.json(route, 404, { message: 'Not found' });
   }
 
   private json(route: Route, status: number, body: unknown): Promise<void> {

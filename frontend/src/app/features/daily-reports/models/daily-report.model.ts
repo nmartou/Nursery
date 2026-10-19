@@ -35,6 +35,12 @@ export interface DailyReportPayload {
   parentNote: string | null;
 }
 
+/** An absence declared in the calendar for that day. */
+export interface PlannedAbsence {
+  kind: 'vacation' | 'sickness' | 'other';
+  comment: string | null;
+}
+
 export interface DailyReport extends DailyReportPayload {
   id: string;
   childId: string;
@@ -43,6 +49,8 @@ export interface DailyReport extends DailyReportPayload {
   /** `YYYY-MM-DD` */
   date: string;
   status: ReportStatus;
+  /** Shown as absent while nothing is entered. */
+  plannedAbsence: PlannedAbsence | null;
   /** ISO timestamp of the last save */
   updatedAt: string;
 }
@@ -53,10 +61,13 @@ export interface DailyReportSummary {
   childFirstName: string;
   childLastName: string;
   status: ReportStatus;
+  plannedAbsence: PlannedAbsence | null;
   updatedAt: string;
 }
 
 export interface DailyReportList {
   date: string;
+  /** Why the nursery is closed that day (holiday, closure); null when open. */
+  closure: string | null;
   reports: DailyReportSummary[];
 }

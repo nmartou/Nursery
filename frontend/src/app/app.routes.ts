@@ -31,6 +31,14 @@ export const routes: Routes = [
             (m) => m.DailyReportsPage,
           ),
       },
+      {
+        path: 'calendrier',
+        title: 'Calendrier · Nursery',
+        loadComponent: () =>
+          import('./features/calendar/pages/calendar-page/calendar-page').then(
+            (m) => m.CalendarPage,
+          ),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

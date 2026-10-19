@@ -1,0 +1,14 @@
+<ul class="agenda" aria-label="Événements du mois">
+  @for (day of busyDays(); track day.date) {
+    <li class="agenda__day" [class.agenda__day--today]="day.today" [attr.data-date]="day.date">
+      <span class="agenda__date">{{ day.label }}</span>
+      <div class="agenda__events">
+        @for (event of day.events; track event.key) {
+          <app-event-chip [event]="event" (openEvent)="openEvent.emit($event)" />
+        }
+      </div>
+    </li>
+  } @empty {
+    <li class="agenda__empty">Aucun événement ce mois-ci.</li>
+  }
+</ul>

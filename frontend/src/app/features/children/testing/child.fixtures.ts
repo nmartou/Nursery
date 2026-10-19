@@ -17,6 +17,7 @@ export const CHILD_SUMMARIES: ChildSummary[] = [
       { firstName: 'Claire', lastName: 'Martin', relationship: 'mother', phone: '06 01 02 03 04' },
     ],
     contactCount: 2,
+    currentAbsence: null,
     updatedAt: '2026-09-01T08:00:00.000Z',
   },
   {
@@ -31,6 +32,7 @@ export const CHILD_SUMMARIES: ChildSummary[] = [
       { firstName: 'Sophie', lastName: 'Bernard', relationship: 'mother', phone: '06 11 22 33 44' },
     ],
     contactCount: 0,
+    currentAbsence: null,
     updatedAt: '2026-09-01T08:00:00.000Z',
   },
   {
@@ -45,6 +47,7 @@ export const CHILD_SUMMARIES: ChildSummary[] = [
       { firstName: 'Laura', lastName: 'Moreau', relationship: 'mother', phone: '07 12 34 56 78' },
     ],
     contactCount: 0,
+    currentAbsence: null,
     updatedAt: '2026-10-01T08:00:00.000Z',
   },
   {
@@ -59,6 +62,7 @@ export const CHILD_SUMMARIES: ChildSummary[] = [
       { firstName: 'Marc', lastName: 'Garnier', relationship: 'father', phone: '06 21 43 65 87' },
     ],
     contactCount: 0,
+    currentAbsence: null,
     updatedAt: '2026-07-31T08:00:00.000Z',
   },
 ];
@@ -92,6 +96,7 @@ export function buildChild(overrides: Partial<Child> = {}): Child {
         phone: '06 10 20 30 40',
       },
     ],
+    absences: [],
     createdAt: '2026-09-01T08:00:00.000Z',
     updatedAt: '2026-09-01T08:00:00.000Z',
     ...overrides,

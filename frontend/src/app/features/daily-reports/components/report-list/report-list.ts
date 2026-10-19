@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { formatTime } from '../../../../shared/utils/date.utils';
+import { PLANNED_ABSENCE_LABELS } from '../../constants/report-status.constants';
 import type { DailyReportSummary } from '../../models/daily-report.model';
 import { ReportStatusBadge } from '../report-status-badge/report-status-badge';
 
@@ -23,4 +24,5 @@ export class ReportList {
   );
 
   protected readonly formatTime = formatTime;
+  protected readonly plannedLabels = PLANNED_ABSENCE_LABELS;
 }

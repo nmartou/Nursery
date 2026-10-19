@@ -24,6 +24,7 @@ export async function createTestApp(): Promise<TestApp> {
   await app.init();
 
   const db = app.get<Database>(DRIZZLE);
-  await db.execute(sql`TRUNCATE nursery, parent CASCADE`);
+  // Children (and their reports, contacts, absences) go with the nursery.
+  await db.execute(sql`TRUNCATE nursery, parent, closure CASCADE`);
   return { app, db };
 }

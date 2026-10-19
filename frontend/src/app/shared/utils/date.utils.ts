@@ -73,3 +73,44 @@ export function formatAge(birthDate: string, today: string): string {
   const years = Math.floor(months / 12);
   return `${years} ans`;
 }
+
+/** `YYYY-MM-DD` shifted by a number of calendar days. */
+export function addDays(isoDate: string, days: number): string {
+  const date = parseIsoDate(isoDate);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** 1 for Monday … 7 for Sunday. */
+export function isoDayOfWeek(isoDate: string): number {
+  return ((parseIsoDate(isoDate).getUTCDay() + 6) % 7) + 1;
+}
+
+/** Today's local date as `YYYY-MM-DD`. */
+export function todayIsoDate(now: Date = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${now.getFullYear()}-${month}-${day}`;
+}
+
+/** e.g. "octobre 2026" for any day of that month. */
+export function formatMonth(isoDate: string): string {
+  return parseIsoDate(isoDate).toLocaleDateString('fr-FR', {
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/** First day (`YYYY-MM-01`) of the month containing `isoDate`. */
+export function firstOfMonth(isoDate: string): string {
+  return `${isoDate.slice(0, 7)}-01`;
+}
+
+/** First day of the month `delta` months away. */
+export function shiftMonth(isoDate: string, delta: number): string {
+  const year = Number(isoDate.slice(0, 4));
+  const month = Number(isoDate.slice(5, 7)) - 1 + delta;
+  const shifted = new Date(Date.UTC(year, month, 1));
+  return shifted.toISOString().slice(0, 10);
+}

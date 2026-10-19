@@ -16,6 +16,19 @@
     </button>
   </header>
 
+  @if (report().plannedAbsence; as absence) {
+    <p class="planned" role="note">
+      <strong>Absence prévue : {{ plannedLabels[absence.kind] }}</strong>
+      @if (absence.comment) {
+        <span>{{ absence.comment }}</span>
+      }
+      <span>
+        Le rapport compte comme absent tant que rien n'y est saisi. Si l'enfant est venu, remplissez
+        simplement sa journée.
+      </span>
+    </p>
+  }
+
   <!-- Présence -->
   <section class="section">
     <div class="section__title">

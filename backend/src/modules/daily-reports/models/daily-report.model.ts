@@ -40,8 +40,15 @@ export interface DailyReport {
   stoolStatus: StoolStatus;
   stoolComment: string | null;
   parentNote: string | null;
+  /** Absence declared in the calendar for that day (vacation, sickness...). */
+  plannedAbsence: PlannedAbsence | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface PlannedAbsence {
+  kind: 'vacation' | 'sickness' | 'other';
+  comment: string | null;
 }
 
 /** Fields the staff can edit during the day. */
@@ -52,6 +59,7 @@ export type DailyReportContent = Omit<
   | 'childFirstName'
   | 'childLastName'
   | 'date'
+  | 'plannedAbsence'
   | 'createdAt'
   | 'updatedAt'
 >;

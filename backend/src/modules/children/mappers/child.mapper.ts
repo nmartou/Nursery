@@ -3,6 +3,10 @@ import type { ChildResponseDto } from '../dtos/child-response.dto.js';
 import type { ChildSummaryDto } from '../dtos/child-summary.dto.js';
 import type { SaveChildDto } from '../dtos/save-child.dto.js';
 import type { Child, ChildInput } from '../models/child.model.js';
+import {
+  absenceHistory,
+  currentAbsence,
+} from '../utils/absence-history.util.js';
 import { computeEnrollmentStatus } from '../utils/enrollment-status.util.js';
 
 export class ChildMapper {
@@ -41,6 +45,7 @@ export class ChildMapper {
       enrollmentStatus: computeEnrollmentStatus(child, today),
       parents: child.parents.map((parent) => ({ ...parent })),
       contacts: child.contacts.map((contact) => ({ ...contact })),
+      absences: absenceHistory(child.absences, child.reportedAbsences),
       createdAt: toIsoString(child.createdAt),
       updatedAt: toIsoString(child.updatedAt),
     };
@@ -64,6 +69,10 @@ export class ChildMapper {
         }),
       ),
       contactCount: child.contacts.length,
+      currentAbsence: currentAbsence(
+        absenceHistory(child.absences, child.reportedAbsences),
+        today,
+      ),
       updatedAt: toIsoString(child.updatedAt),
     };
   }

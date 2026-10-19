@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import { DRIZZLE } from '../../../common/constants/injection-tokens.js';
+import { closureOn } from '../../../common/database/closures.js';
 import type { Database } from '../../../common/database/database.module.js';
 import { isEnrolledOn } from '../../../common/database/enrollment.js';
 import {
   child,
+  childAbsence,
   dailyReport,
   reportBottle,
   reportMeal,
@@ -14,6 +16,7 @@ import { toHourMinute } from '../../../common/utils/date.util.js';
 import type {
   DailyReport,
   DailyReportContent,
+  PlannedAbsence,
 } from '../models/daily-report.model.js';
 
 /** Everything a report needs, loaded in one relational query. */
@@ -80,8 +83,12 @@ export class DailyReportRepository {
       ),
       with: WITH_DETAILS,
     });
+    const absences = await this.plannedAbsences(
+      date,
+      reports.map((report) => report.childId),
+    );
     return reports
-      .map((report) => this.toModel(report))
+      .map((report) => this.toModel(report, absences.get(report.childId)))
       .sort((a, b) => {
         const byLastName = a.childLastName.localeCompare(b.childLastName);
         return byLastName !== 0
@@ -92,7 +99,48 @@ export class DailyReportRepository {
 
   async findById(id: string): Promise<DailyReport | null> {
     const report = await this.findOneWithDetails(id);
-    return report ? this.toModel(report) : null;
+    if (!report) {
+      return null;
+    }
+    const absences = await this.plannedAbsences(report.reportDate, [
+      report.childId,
+    ]);
+    return this.toModel(report, absences.get(report.childId));
+  }
+
+  /** Why the nursery is closed that day (holiday, closure), or null. */
+  closureOn(date: string): Promise<string | null> {
+    return closureOn(this.db, date);
+  }
+
+  /** Absences declared in the calendar on that day, by child id. */
+  private async plannedAbsences(
+    date: string,
+    childIds: string[],
+  ): Promise<Map<string, PlannedAbsence>> {
+    if (childIds.length === 0) {
+      return new Map();
+    }
+    const absences = await this.db
+      .select({
+        childId: childAbsence.childId,
+        kind: childAbsence.kind,
+        comment: childAbsence.comment,
+      })
+      .from(childAbsence)
+      .where(
+        and(
+          inArray(childAbsence.childId, childIds),
+          lte(childAbsence.startDate, date),
+          gte(childAbsence.endDate, date),
+        ),
+      );
+    return new Map(
+      absences.map(({ childId, kind, comment }) => [
+        childId,
+        { kind, comment },
+      ]),
+    );
   }
 
   /** Replaces the editable content of a report; returns null when it does not exist. */
@@ -161,7 +209,10 @@ export class DailyReportRepository {
     });
   }
 
-  private toModel(report: ReportWithDetails): DailyReport {
+  private toModel(
+    report: ReportWithDetails,
+    plannedAbsence: PlannedAbsence | undefined,
+  ): DailyReport {
     return {
       id: report.id,
       childId: report.childId,
@@ -187,6 +238,7 @@ export class DailyReportRepository {
       stoolStatus: report.stoolStatus,
       stoolComment: report.stoolComment,
       parentNote: report.parentNote,
+      plannedAbsence: plannedAbsence ?? null,
       createdAt: report.createdAt,
       updatedAt: report.updatedAt,
     };

@@ -1,4 +1,4 @@
-import type { ReportStatus } from '../models/daily-report.model';
+import type { PlannedAbsence, ReportStatus } from '../models/daily-report.model';
 
 export interface ReportStatusDisplay {
   label: string;
@@ -11,4 +11,11 @@ export const REPORT_STATUS_DISPLAY: Record<ReportStatus, ReportStatusDisplay> = 
   in_progress: { label: 'À compléter', hint: 'Partiellement rempli' },
   complete: { label: 'Complet', hint: 'Entièrement rempli' },
   absent: { label: 'Absent', hint: "L'enfant n'est pas venu" },
+};
+
+/** Reasons of the absences planned in the calendar. */
+export const PLANNED_ABSENCE_LABELS: Record<PlannedAbsence['kind'], string> = {
+  vacation: 'Congés',
+  sickness: 'Maladie',
+  other: 'Absence prévue',
 };

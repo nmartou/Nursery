@@ -1,9 +1,14 @@
 import {
+  addDays,
   addWeekdays,
   currentTime,
   formatAge,
   formatLongDate,
+  formatMonth,
   formatShortDate,
+  isoDayOfWeek,
+  shiftMonth,
+  todayIsoDate,
   isWeekday,
 } from './date.utils';
 
@@ -37,5 +42,19 @@ describe('date utils', () => {
     expect(formatAge('2024-11-01', '2026-10-19')).toBe('23 mois');
     expect(formatAge('2024-03-12', '2026-10-19')).toBe('2 ans');
     expect(formatAge('2026-12-01', '2026-10-19')).toBe('à naître');
+  });
+
+  it('moves by calendar days and months', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+    expect(shiftMonth('2026-12-15', 1)).toBe('2027-01-01');
+    expect(shiftMonth('2026-01-31', -1)).toBe('2025-12-01');
+  });
+
+  it('gives the ISO day of week, today and the month name', () => {
+    expect(isoDayOfWeek('2026-10-19')).toBe(1); // Monday
+    expect(isoDayOfWeek('2026-10-25')).toBe(7); // Sunday
+    expect(todayIsoDate(new Date(2026, 9, 19, 23, 30))).toBe('2026-10-19');
+    expect(formatMonth('2026-10-19')).toBe('octobre 2026');
   });
 });

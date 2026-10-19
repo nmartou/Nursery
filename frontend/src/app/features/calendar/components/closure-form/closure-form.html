@@ -1,0 +1,76 @@
+<form class="modal-form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <header class="modal-form__header">
+    <div>
+      <h2 id="closure-form-title">
+        {{ isNew() ? 'Nouvelle fermeture' : 'Modifier la fermeture' }}
+      </h2>
+      <p>Aucun rapport n'est créé pendant une fermeture de la crèche.</p>
+    </div>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fermer le formulaire"
+      title="Fermer"
+      (click)="cancelForm.emit()"
+    >
+      ✕
+    </button>
+  </header>
+
+  <div class="modal-form__body">
+    <label class="field">
+      <span>Motif</span>
+      <input
+        type="text"
+        formControlName="label"
+        autocomplete="off"
+        placeholder="Vacances de Noël, pont de l'Ascension…"
+        [class.invalid]="isInvalid('label')"
+      />
+      @if (isInvalid('label')) {
+        <small class="error">Le motif est obligatoire.</small>
+      }
+    </label>
+
+    <div class="grid">
+      <label class="field">
+        <span>Premier jour</span>
+        <input type="date" formControlName="startDate" [class.invalid]="isInvalid('startDate')" />
+        @if (isInvalid('startDate')) {
+          <small class="error">Le premier jour est obligatoire.</small>
+        }
+      </label>
+      <label class="field">
+        <span>Dernier jour</span>
+        <input
+          type="date"
+          formControlName="endDate"
+          [class.invalid]="isInvalid('endDate') || form.hasError('endBeforeStart')"
+        />
+        @if (isInvalid('endDate')) {
+          <small class="error">Le dernier jour est obligatoire.</small>
+        } @else if (form.hasError('endBeforeStart')) {
+          <small class="error">Le dernier jour doit suivre le premier.</small>
+        }
+      </label>
+    </div>
+    <p class="hint">Les jours fériés sont déjà pris en compte automatiquement.</p>
+  </div>
+
+  <footer class="modal-form__footer">
+    @if (!isNew()) {
+      <button type="button" class="button button--danger" (click)="deleteClosure.emit()">
+        Supprimer
+      </button>
+    }
+    @if (saveError(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+    <div class="modal-form__actions">
+      <button type="button" class="button" (click)="cancelForm.emit()">Annuler</button>
+      <button type="submit" class="button button--primary" [disabled]="saving()">
+        {{ saving() ? 'Enregistrement…' : 'Enregistrer' }}
+      </button>
+    </div>
+  </footer>
+</form>

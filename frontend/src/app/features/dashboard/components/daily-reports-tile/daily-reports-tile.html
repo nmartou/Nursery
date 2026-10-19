@@ -4,7 +4,9 @@
   } @else if (error()) {
     <p class="state state--error">Impossible de charger les rapports du jour.</p>
   } @else if (stats(); as stats) {
-    @if (stats.total === 0) {
+    @if (stats.closure) {
+      <p class="state state--closed">Crèche fermée : {{ stats.closure }}.</p>
+    } @else if (stats.total === 0) {
       <p class="state">Aucun enfant inscrit pour cette journée.</p>
     } @else {
       <div class="progress">

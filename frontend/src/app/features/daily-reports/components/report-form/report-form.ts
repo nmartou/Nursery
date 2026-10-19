@@ -16,6 +16,7 @@ import {
 } from '@angular/forms';
 import { currentTime, formatLongDate, formatTime } from '../../../../shared/utils/date.utils';
 import type { DailyReport, DailyReportPayload, StoolStatus } from '../../models/daily-report.model';
+import { PLANNED_ABSENCE_LABELS } from '../../constants/report-status.constants';
 import { toFormValue, toPayload } from '../../utils/report-form.utils';
 import { ReportStatusBadge } from '../report-status-badge/report-status-badge';
 
@@ -61,6 +62,7 @@ export class ReportForm {
     initialValue: 'normal',
   });
 
+  protected readonly plannedLabels = PLANNED_ABSENCE_LABELS;
   protected readonly longDate = computed(() => formatLongDate(this.report().date));
   protected readonly lastSaved = computed(() => formatTime(this.report().updatedAt));
 
