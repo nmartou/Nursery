@@ -64,8 +64,8 @@
         @for (meal of meals.controls; track meal; let i = $index) {
           <div class="entry" [formGroupName]="i">
             <label class="field field--grow">
-              <span class="sr-only">Aliment</span>
               <input
+                aria-label="Aliment"
                 type="text"
                 formControlName="label"
                 placeholder="Ex. purée de carottes"
@@ -73,9 +73,14 @@
               />
             </label>
             <label class="field field--unit">
-              <span class="sr-only">Quantité en grammes</span>
-              <input type="number" min="0" formControlName="quantityGrams" placeholder="0" />
-              <span class="unit">g</span>
+              <input
+                aria-label="Quantité en grammes"
+                type="number"
+                min="0"
+                formControlName="quantityGrams"
+                placeholder="0"
+              />
+              <span class="unit" aria-hidden="true">g</span>
             </label>
             <button
               type="button"
@@ -95,17 +100,22 @@
         @for (bottle of bottles.controls; track bottle; let i = $index) {
           <div class="entry" [formGroupName]="i">
             <label class="field">
-              <span class="sr-only">Heure du biberon</span>
               <input
+                aria-label="Heure du biberon"
                 type="time"
                 formControlName="time"
                 [class.invalid]="isInvalid('bottles.' + i + '.time')"
               />
             </label>
             <label class="field field--unit">
-              <span class="sr-only">Quantité en millilitres</span>
-              <input type="number" min="0" formControlName="quantityMl" placeholder="0" />
-              <span class="unit">ml</span>
+              <input
+                aria-label="Quantité en millilitres"
+                type="number"
+                min="0"
+                formControlName="quantityMl"
+                placeholder="0"
+              />
+              <span class="unit" aria-hidden="true">ml</span>
             </label>
             <button
               type="button"
@@ -141,8 +151,8 @@
           @for (nap of naps.controls; track nap; let i = $index) {
             <div class="entry" [formGroupName]="i">
               <label class="field">
-                <span class="sr-only">Début de la sieste</span>
                 <input
+                  aria-label="Début de la sieste"
                   type="time"
                   formControlName="startTime"
                   [class.invalid]="isInvalid('naps.' + i + '.startTime')"
@@ -150,8 +160,7 @@
               </label>
               <span aria-hidden="true">→</span>
               <label class="field">
-                <span class="sr-only">Fin de la sieste</span>
-                <input type="time" formControlName="endTime" />
+                <input aria-label="Fin de la sieste" type="time" formControlName="endTime" />
               </label>
               <button
                 type="button"
@@ -177,8 +186,7 @@
     <section class="section">
       <h3>Selles <em>(facultatif)</em></h3>
       <label class="field">
-        <span class="sr-only">État des selles</span>
-        <select formControlName="stoolStatus">
+        <select aria-label="État des selles" formControlName="stoolStatus">
           <option value="normal">Normales</option>
           <option value="other">Autre</option>
         </select>
@@ -205,8 +213,8 @@
     <section class="section">
       <h3>Transmission aux parents</h3>
       <label class="field">
-        <span class="sr-only">Message pour les parents</span>
         <textarea
+          aria-label="Message pour les parents"
           formControlName="parentNote"
           rows="3"
           placeholder="Ce que les parents doivent savoir sur la journée…"
