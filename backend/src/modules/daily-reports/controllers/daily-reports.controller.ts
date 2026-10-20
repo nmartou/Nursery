@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Put,
   Query,
 } from '@nestjs/common';
@@ -13,6 +12,7 @@ import { DailyReportStatsResponseDto } from '../dtos/daily-report-stats.dto.js';
 import { DailyReportListResponseDto } from '../dtos/daily-report-summary.dto.js';
 import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import { DailyReportsService } from '../services/daily-reports.service.js';
+import { ParseIdPipe } from '../../../common/pipes/parse-id.pipe.js';
 
 @Controller('daily-reports')
 export class DailyReportsController {
@@ -35,14 +35,14 @@ export class DailyReportsController {
 
   @Get(':id')
   getById(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIdPipe) id: string,
   ): Promise<DailyReportResponseDto> {
     return this.dailyReportsService.getById(id);
   }
 
   @Put(':id')
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIdPipe) id: string,
     @Body() dto: UpdateDailyReportDto,
   ): Promise<DailyReportResponseDto> {
     return this.dailyReportsService.update(id, dto);

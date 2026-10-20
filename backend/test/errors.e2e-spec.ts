@@ -75,6 +75,9 @@ describe('Error responses (e2e)', () => {
 
   it('explain a malformed id', async () => {
     const res = await http().get('/api/children/not-a-uuid').expect(400);
-    expect(res.body).toMatchObject({ code: 'request.invalid' });
+    expect(res.body).toMatchObject({
+      code: 'request.invalidId',
+      messages: ['This identifier is not valid.'],
+    });
   });
 });

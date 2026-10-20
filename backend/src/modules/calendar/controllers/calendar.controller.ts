@@ -5,7 +5,6 @@ import {
   Get,
   HttpCode,
   Param,
-  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -19,6 +18,7 @@ import {
 import { SaveAbsenceDto } from '../dtos/save-absence.dto.js';
 import { SaveClosureDto } from '../dtos/save-closure.dto.js';
 import { CalendarService } from '../services/calendar.service.js';
+import { ParseIdPipe } from '../../../common/pipes/parse-id.pipe.js';
 
 /** Routes of the calendar and of the two kinds of events it lets the staff edit. */
 @Controller()
@@ -37,7 +37,7 @@ export class CalendarController {
 
   @Put('closures/:id')
   updateClosure(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIdPipe) id: string,
     @Body() dto: SaveClosureDto,
   ): Promise<ClosureResponseDto> {
     return this.calendarService.updateClosure(id, dto);
@@ -45,7 +45,7 @@ export class CalendarController {
 
   @Delete('closures/:id')
   @HttpCode(204)
-  deleteClosure(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  deleteClosure(@Param('id', ParseIdPipe) id: string): Promise<void> {
     return this.calendarService.deleteClosure(id);
   }
 
@@ -56,7 +56,7 @@ export class CalendarController {
 
   @Put('absences/:id')
   updateAbsence(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIdPipe) id: string,
     @Body() dto: SaveAbsenceDto,
   ): Promise<AbsenceResponseDto> {
     return this.calendarService.updateAbsence(id, dto);
@@ -64,7 +64,7 @@ export class CalendarController {
 
   @Delete('absences/:id')
   @HttpCode(204)
-  deleteAbsence(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+  deleteAbsence(@Param('id', ParseIdPipe) id: string): Promise<void> {
     return this.calendarService.deleteAbsence(id);
   }
 }

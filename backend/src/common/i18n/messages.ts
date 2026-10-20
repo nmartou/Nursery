@@ -7,6 +7,7 @@ const EN = {
   // --- Requests --------------------------------------------------------------
   'request.invalid': 'The request was refused.',
   'request.notFound': 'This resource does not exist.',
+  'request.invalidId': 'This identifier is not valid.',
   'route.notFound': 'This address does not exist: {method} {path}.',
   'body.invalidJson': 'The body of the request is not valid JSON.',
   'body.tooLarge': 'The request is too large.',
@@ -77,6 +78,7 @@ export type MessageKey = keyof typeof EN;
 const FR: Record<MessageKey, string> = {
   'request.invalid': 'La requête a été refusée.',
   'request.notFound': "Cette ressource n'existe pas.",
+  'request.invalidId': "Cet identifiant n'est pas valide.",
   'route.notFound': "Cette adresse n'existe pas : {method} {path}.",
   'body.invalidJson': "Le corps de la requête n'est pas un JSON valide.",
   'body.tooLarge': 'La requête est trop volumineuse.',

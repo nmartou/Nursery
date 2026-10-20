@@ -3,7 +3,6 @@ import {
   Controller,
   Get,
   Param,
-  ParseUUIDPipe,
   Post,
   Put,
 } from '@nestjs/common';
@@ -11,6 +10,7 @@ import { ChildResponseDto } from '../dtos/child-response.dto.js';
 import { ChildListResponseDto } from '../dtos/child-summary.dto.js';
 import { SaveChildDto } from '../dtos/save-child.dto.js';
 import { ChildrenService } from '../services/children.service.js';
+import { ParseIdPipe } from '../../../common/pipes/parse-id.pipe.js';
 
 @Controller('children')
 export class ChildrenController {
@@ -22,7 +22,7 @@ export class ChildrenController {
   }
 
   @Get(':id')
-  getById(@Param('id', ParseUUIDPipe) id: string): Promise<ChildResponseDto> {
+  getById(@Param('id', ParseIdPipe) id: string): Promise<ChildResponseDto> {
     return this.childrenService.getById(id);
   }
 
@@ -33,7 +33,7 @@ export class ChildrenController {
 
   @Put(':id')
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', ParseIdPipe) id: string,
     @Body() dto: SaveChildDto,
   ): Promise<ChildResponseDto> {
     return this.childrenService.update(id, dto);
