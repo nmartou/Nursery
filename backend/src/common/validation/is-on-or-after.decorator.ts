@@ -1,4 +1,8 @@
-import { registerDecorator, type ValidationOptions } from 'class-validator';
+import {
+  registerDecorator,
+  type ValidationArguments,
+  type ValidationOptions,
+} from 'class-validator';
 
 /**
  * The decorated `YYYY-MM-DD` date must be the same day as, or after, the date
@@ -20,10 +24,8 @@ export function IsOnOrAfter(
         ...options,
       },
       validator: {
-        validate(value: unknown, args): boolean {
-          if (!args) {
-            return true;
-          }
+        // class-validator always passes the arguments when validating.
+        validate(value: unknown, args: ValidationArguments): boolean {
           const [other] = args.constraints as [string];
           const reference = (args.object as Record<string, unknown>)[other];
           if (typeof value !== 'string' || typeof reference !== 'string') {
