@@ -106,6 +106,14 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 - **Tests UI** : les tests Playwright (`e2e/`) mockent l'API avec `e2e/support/mock-api.ts` et utilisent un page object (`e2e/pages/`).
 - **Responsive** : L'ensemble des éléments doivent être responsive pour être accessible via un smartphone
 
+## Tests
+
+Dans l'ensemble du projet, dès qu'une fonction est ajoutée, écris les tests correspondants afin de valider la fonctionnalité. Ils doivent prendre les cas ou la fonction fonctionne correctement et les cas plus absurde liées aux données. Si l'ensemble d'une fonctionnalité à été ajouté, n'oublie pas les tests d'intégration et e2e.
+
+## Errors handling
+
+Fais en sorte de gérer les erreurs possible pour chaque fonction (message d'erreur si nécessaire en frontend, et logs ou code http en backend).
+
 ## Règles de lint propres au projet
 
 Elles sont bloquantes (erreurs). Les règles maison se trouvent dans `backend/eslint-rules/`, `frontend/eslint-rules/` et `frontend/stylelint-rules/`.
