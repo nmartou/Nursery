@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { validationMessages } from '../../../common/validation/validation-exception.factory.js';
 import { SAVE_CHILD_PAYLOAD } from '../testing/child.fixtures.js';
 import { SaveChildDto } from './save-child.dto.js';
 
@@ -73,5 +74,16 @@ describe('SaveChildDto', () => {
       contacts: [{ ...SAVE_CHILD_PAYLOAD.contacts[0], relationship: '' }],
     });
     expect(errors.map((e) => e.property)).toEqual(['parents', 'contacts']);
+  });
+
+  it('explains the refused parents in French, naming the field', async () => {
+    const dto = plainToInstance(SaveChildDto, {
+      ...SAVE_CHILD_PAYLOAD,
+      parents: [{ ...parent, email: 'not-an-email', phone: '12' }],
+    });
+    expect(validationMessages(await validate(dto))).toEqual([
+      '« parents.0.email » doit être une adresse e-mail valide.',
+      'Le numéro de téléphone ne peut contenir que des chiffres, des espaces et + ( ) . -.',
+    ]);
   });
 });

@@ -16,7 +16,7 @@ import {
 import type { StoolStatus } from '../models/daily-report.model.js';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
-const TIME_MESSAGE = '$property must be a time formatted as HH:mm';
+const TIME_MESSAGE = 'Les heures doivent être au format HH:mm (ex. 08:30).';
 
 export class MealDto {
   @IsString()
@@ -101,7 +101,7 @@ export class UpdateDailyReportDto {
   @ValidateIf((dto: UpdateDailyReportDto) => dto.stoolStatus === 'other')
   @IsString()
   @IsNotEmpty({
-    message: 'stoolComment is required when stoolStatus is "other"',
+    message: "Précisez l'aspect des selles quand elles ne sont pas normales.",
   })
   @MaxLength(500)
   stoolComment: string | null;

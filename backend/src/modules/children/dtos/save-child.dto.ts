@@ -27,7 +27,8 @@ const PARENT_RELATIONSHIPS: ParentRelationship[] = [
 
 /** Digits, spaces and + ( ) . - only, e.g. "06 12 34 56 78" or "+33 6 12 34 56 78". */
 const PHONE_PATTERN = /^\+?[0-9 ().-]{6,30}$/;
-const PHONE_MESSAGE = '$property must be a phone number';
+const PHONE_MESSAGE =
+  'Le numéro de téléphone ne peut contenir que des chiffres, des espaces et + ( ) . -.';
 
 export class SaveParentDto {
   @Trim()
