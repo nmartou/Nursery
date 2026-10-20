@@ -9,7 +9,7 @@ Nursery : application de communication crèche ↔ parents. Monolithe composé d
 - `backend/` : API REST NestJS 12 (ESM, `"type": "module"`), TypeScript 6, PostgreSQL via l'ORM **Drizzle** (`drizzle-orm` sur un pool `pg`).
 - `frontend/` : Angular 21 (standalone, signals, OnPush), servi par nginx en production.
 
-L'interface, les messages d'erreur visibles et la documentation sont en **français**. Le code, les identifiants, les commentaires et les messages de commit sont en anglais.
+L'interface et la documentation sont en **français**. Les messages d'erreur montrés à l'utilisateur ne sont jamais écrits en dur dans le code qui les produit : ils passent par un catalogue par langue (français aujourd'hui, d'autres langues possibles), l'anglais servant de langue par défaut (voir « Gestion des erreurs »). Le code, les identifiants, les commentaires, les logs et les messages de commit sont en anglais.
 
 ## Commandes
 
@@ -56,7 +56,7 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 - **Base de données** (`src/common/database/`) :
   - `schema.ts` est la source de vérité unique : tables, contraintes, index et `relations()` utilisées par l'API relationnelle (`db.query.<table>.findMany({ with })`). Les colonnes sont nommées en snake_case explicite, les propriétés en camelCase.
   - `database.module.ts` (global) fournit `PG_POOL` et `DRIZZLE`. Le pool ne se connecte qu'à la première requête.
-- **`app.setup.ts`** regroupe la configuration HTTP commune à `main.ts` et aux tests e2e : préfixe `api`, CORS, `ValidationPipe({ whitelist: true, transform: true })` et filtre d'exceptions. À cause de `whitelist`, toute propriété de DTO d'entrée sans décorateur class-validator est supprimée silencieusement. La règle de lint `nursery/dto-properties-validated` le vérifie.
+- **`app.setup.ts`** regroupe la configuration HTTP commune à `main.ts` et aux tests e2e : CORS, parseurs JSON et urlencoded (100 ko) suivis du middleware qui traduit leurs erreurs, préfixe `api`, `ValidationPipe({ whitelist: true, transform: true, exceptionFactory })` et filtre d'exceptions. L'application doit donc être créée avec `{ bodyParser: false }` (c'est le cas dans `main.ts` et `test/support/test-app.ts`). À cause de `whitelist`, toute propriété de DTO d'entrée sans décorateur class-validator est supprimée silencieusement. La règle de lint `nursery/dto-properties-validated` le vérifie.
 - **Configuration** : `@nestjs/config` avec des fichiers typés (`src/config/*.config.ts`, `registerAs`), lus via `config.getOrThrow<T>('app' | 'database')`. Les variables viennent de `backend/.env` (non versionné ; modèle dans `.env.example`).
 - **Les imports relatifs se terminent par `.js`** (ESM `nodenext`), même s'ils pointent vers des fichiers `.ts`.
 
@@ -86,7 +86,7 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 - **Validation des DTO** : `@Trim()` (`common/validation/`) nettoie les textes avant validation, et `@IsOnOrAfter('autreChamp')` compare deux dates d'un même DTO.
 - **Statut d'un rapport** : il n'est pas stocké, il est recalculé (`modules/daily-reports/utils/report-status.util.ts`) et vaut `todo`, `in_progress`, `complete` ou `absent`.
 - **Dates et heures** : les dates circulent en chaînes `YYYY-MM-DD` (`date({ mode: 'string' })`). Les heures sont en `HH:mm` dans l'API, mais PostgreSQL renvoie `HH:mm:ss` : les repositories passent par `toHourMinute()`.
-- **Identifiants** : ce sont des UUID, validés par `ParseUUIDPipe` dans les routes (un id invalide renvoie 400, pas 500).
+- **Identifiants** : ce sont des UUID, validés par `ParseIdPipe` (`common/pipes/`) dans les routes : un id invalide renvoie 400 `request.invalidId`, pas 500.
 
 ## Architecture frontend
 
@@ -110,9 +110,21 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
 
 Dans l'ensemble du projet, dès qu'une fonction est ajoutée, écris les tests correspondants afin de valider la fonctionnalité. Ils doivent prendre les cas ou la fonction fonctionne correctement et les cas plus absurde liées aux données. Si l'ensemble d'une fonctionnalité à été ajouté, n'oublie pas les tests d'intégration et e2e.
 
-## Errors handling
+## Gestion des erreurs
 
-Fais en sorte de gérer les erreurs possible pour chaque fonction (message d'erreur si nécessaire en frontend, et logs ou code http en backend).
+Fais en sorte de gérer les erreurs possibles pour chaque fonction (message d'erreur si nécessaire en frontend, et logs ou code HTTP en backend).
+
+**Backend**
+- Toute réponse d'erreur a la même forme (`ErrorResponseBody`, `common/filters/http-exception.filter.ts`) : `{ statusCode, error, code, messages, path, timestamp }`. `code` est une clé stable (`absence.overlap`) et `messages` une liste non vide, déjà traduite.
+- On ne lève jamais un texte : `throw new ConflictException(apiError('absence.overlap'))` (`common/i18n/api-error.ts`). Un message de DTO est aussi une clé : `{ message: 'validation.time' satisfies MessageKey }`. Pour une nouvelle erreur, on ajoute la clé dans `common/i18n/messages.ts`, en anglais (référence, obligatoire) et dans chaque autre langue (le type l'impose).
+- Le filtre choisit la langue d'après `Accept-Language` (`languageFrom`, anglais par défaut). Les erreurs de validation donnent `validation.failed` avec un message par contrainte (`validation.<contrainte>`, avec le chemin du champ, ex. `parents.0.email`). Les erreurs de Nest ou d'Express (route inconnue…) reçoivent un message générique, et leur texte anglais part dans les logs.
+- Les erreurs PostgreSQL (`common/database/database-errors.ts`, recherchées dans la chaîne `cause` de Drizzle) donnent : doublon ou référence supprimée → 409, valeur refusée → 400, base injoignable → 503. Les erreurs des parseurs donnent : JSON invalide → 400, corps trop gros → 413, encodage non pris en charge → 415.
+- Logs : toute erreur 5xx est journalisée en `error` avec sa pile et celle de ses causes, et les 4xx inattendues (Nest, base de données) le sont en `warn`. Le détail d'une 500 n'est jamais envoyé au client.
+
+**Frontend**
+- La langue de l'interface est `APP_LANGUAGE` (`shared/i18n/language.ts`). L'intercepteur `languageInterceptor` (`core/http/`) l'envoie en `Accept-Language`, si bien que l'API répond dans cette langue.
+- Les messages d'erreur écrits par l'interface sont dans `shared/i18n/error-messages.ts` (anglais de référence, plus une traduction par langue) : `errorMessage('clé')` dans le code, `{{ 'clé' | errorMessage }}` (`ErrorMessagePipe`) dans les templates.
+- Après un appel HTTP en échec, on affiche `httpErrorMessage(error, 'clé de repli')` (`shared/utils/http-error.utils.ts`). Selon le cas, il renvoie « serveur injoignable » (statut 0), les `messages` de l'API, ou le message de repli. `apiErrorCode(error)` lit le `code` pour réagir à une erreur précise.
 
 ## Règles de lint propres au projet
 
