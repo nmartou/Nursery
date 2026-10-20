@@ -25,6 +25,7 @@ npm test                           # tests unitaires Vitest (*.spec.ts)
 npx vitest run src/modules/daily-reports   # un fichier ou un dossier
 npx vitest run -t "nom du test"    # un test par son nom
 npm run test:e2e                   # tests HTTP (test/*.e2e-spec.ts) et des repositories (src/**/*.db-spec.ts) sur la base <DB_NAME>_test
+npm run test:cov                   # couverture de src/ par les deux suites réunies (base de test requise)
 npm run db:generate                # génère une migration depuis le schéma Drizzle
 npm run db:migrate                 # applique les migrations en attente (lit .env)
 npm run db:seed                    # migrations en attente puis données d'exemple, seulement si la base est vide
@@ -67,6 +68,7 @@ Les deux serveurs de dev sont déclarés dans `.claude/launch.json` (`backend`, 
   - services : tests unitaires (`*.spec.ts`) avec un repository mocké (`vi.fn()`) ;
   - repositories : tests sur la base de test (`*.repository.db-spec.ts`, à côté du repository), sans l'application Nest, via `connectTestDatabase()`, `resetDatabase()` et `insertChild()` (`test/support/test-db.ts`). On ne mocke pas Drizzle : un mock vérifierait l'écriture de la requête, pas son résultat ;
   - controllers : pas de test unitaire, ils ne font que déléguer au service. Le routage, les pipes, la validation des DTO et les codes HTTP sont couverts par les tests e2e (`test/*.e2e-spec.ts`).
+  - couverture (`npm run test:cov`, `vitest.config.cov.ts`) : les deux configurations y tournent comme projets (`unit`, `db`) et leur couverture est fusionnée. Elle doit rester à 100 % des lignes et des fonctions. Les branches non couvertes restantes sont sur les constructeurs injectés (`typeof X === "function" ? X : Object`, émis par `emitDecoratorMetadata`), inatteignables.
 - Contraintes métier imposées par le schéma :
   - un seul rapport par enfant et par jour (`UNIQUE (child_id, report_date)`) ;
   - jours de semaine uniquement (`CHECK ISODOW < 6`) ;
