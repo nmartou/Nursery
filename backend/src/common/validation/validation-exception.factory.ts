@@ -1,67 +1,45 @@
 import { BadRequestException } from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
+import { apiError, type ApiErrorDetail } from '../i18n/api-error.js';
+import { isMessageKey } from '../i18n/messages.js';
 
 /**
- * French wording of the class-validator constraints used by the DTOs; `n` is
- * the number of the constraint (length, size, minimum), when there is one.
- */
-const DEFAULT_MESSAGES: Record<string, (n: string) => string> = {
-  isNotEmpty: () => 'est obligatoire',
-  isDefined: () => 'est obligatoire',
-  isString: () => 'doit être un texte',
-  maxLength: (n) => `ne doit pas dépasser ${n} caractères`,
-  isDateString: () => 'doit être une date au format AAAA-MM-JJ',
-  isIn: () => 'contient une valeur non autorisée',
-  isInt: () => 'doit être un nombre entier',
-  min: (n) => `doit être supérieur ou égal à ${n}`,
-  isBoolean: () => 'doit valoir vrai ou faux',
-  isArray: () => 'doit être une liste',
-  arrayMinSize: (n) => `doit contenir au moins ${n} élément(s)`,
-  arrayMaxSize: (n) => `ne doit pas contenir plus de ${n} éléments`,
-  isUuid: () => 'doit être un identifiant valide',
-  isEmail: () => 'doit être une adresse e-mail valide',
-  nestedValidation: () => 'doit être un objet',
-};
-
-/**
- * `exceptionFactory` of the ValidationPipe: one French message per failed
- * constraint, nested properties included (`parents.0.email`).
- *
- * class-validator's default messages are English and start with the name of
- * the property ("email must be an email"): those are replaced. Messages given
- * in a DTO (`{ message: '…' }`) are written in French without the property
- * name, and are kept as they are.
+ * `exceptionFactory` of the ValidationPipe: a 400 `validation.failed` with one
+ * message key per failed constraint, translated by the exception filter.
  */
 export function validationExceptionFactory(
   errors: ValidationError[],
 ): BadRequestException {
-  return new BadRequestException(validationMessages(errors));
-}
-
-export function validationMessages(
-  errors: ValidationError[],
-  parentPath = '',
-): string[] {
-  return errors.flatMap((error) => {
-    const path = parentPath ? `${parentPath}.${error.property}` : error.property;
-    const own = Object.entries(error.constraints ?? {}).map(([name, message]) =>
-      isDefaultMessage(message, error.property)
-        ? `« ${path} » ${frenchMessage(name, message)}.`
-        : message,
-    );
-    return [...own, ...validationMessages(error.children ?? [], path)];
-  });
-}
-
-/** "email must be an email", "each value in tags must be…" */
-function isDefaultMessage(message: string, property: string): boolean {
-  return (
-    message.startsWith(`${property} `) ||
-    message.startsWith(`each value in ${property} `)
+  return new BadRequestException(
+    apiError('validation.failed', undefined, validationDetails(errors)),
   );
 }
 
-function frenchMessage(constraint: string, english: string): string {
-  const number = /\d+/.exec(english)?.[0] ?? '';
-  return DEFAULT_MESSAGES[constraint]?.(number) ?? 'est invalide';
+/**
+ * A DTO gives a catalog key as message (`{ message: 'validation.phone' }`);
+ * otherwise the constraint is described by `validation.<constraint>` (or
+ * `validation.invalid`), with the path of the field (`parents.0.email`) and the
+ * number of the constraint when there is one (length, size, minimum).
+ */
+export function validationDetails(
+  errors: ValidationError[],
+  parentPath = '',
+): ApiErrorDetail[] {
+  return errors.flatMap((error) => {
+    const field = parentPath ? `${parentPath}.${error.property}` : error.property;
+    const own = Object.entries(error.constraints ?? {}).map(
+      ([constraint, message]): ApiErrorDetail => {
+        if (isMessageKey(message)) {
+          return { code: message };
+        }
+        const key = `validation.${constraint}`;
+        const n = /\d+/.exec(message)?.[0];
+        return {
+          code: isMessageKey(key) ? key : 'validation.invalid',
+          params: n === undefined ? { field } : { field, n },
+        };
+      },
+    );
+    return [...own, ...validationDetails(error.children ?? [], field)];
+  });
 }

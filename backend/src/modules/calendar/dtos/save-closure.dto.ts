@@ -1,3 +1,4 @@
+import type { MessageKey } from '../../../common/i18n/messages.js';
 import { IsDateString, IsNotEmpty, IsString, MaxLength } from 'class-validator';
 import { IsOnOrAfter } from '../../../common/validation/is-on-or-after.decorator.js';
 import { Trim } from '../../../common/validation/trim.decorator.js';
@@ -9,7 +10,7 @@ export class SaveClosureDto {
 
   @IsDateString({ strict: true })
   @IsOnOrAfter('startDate', {
-    message: 'Le dernier jour de fermeture doit suivre le premier.',
+    message: 'validation.closureEndBeforeStart' satisfies MessageKey,
   })
   endDate: string;
 

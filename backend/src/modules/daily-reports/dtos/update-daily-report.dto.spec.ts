@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { validationMessages } from '../../../common/validation/validation-exception.factory.js';
+import { translate } from '../../../common/i18n/messages.js';
+import { validationDetails } from '../../../common/validation/validation-exception.factory.js';
 import { EMPTY_REPORT_CONTENT } from '../testing/daily-report.fixtures.js';
 import { UpdateDailyReportDto } from './update-daily-report.dto.js';
 
@@ -19,7 +20,9 @@ async function messagesFor(payload: Record<string, unknown>): Promise<string[]> 
     ...EMPTY_REPORT_CONTENT,
     ...payload,
   });
-  return validationMessages(await validate(dto));
+  return validationDetails(await validate(dto)).map((d) =>
+    translate('fr', d.code, d.params),
+  );
 }
 
 describe('UpdateDailyReportDto', () => {

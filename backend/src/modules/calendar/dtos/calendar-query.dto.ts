@@ -1,3 +1,4 @@
+import type { MessageKey } from '../../../common/i18n/messages.js';
 import { IsDateString } from 'class-validator';
 import { IsOnOrAfter } from '../../../common/validation/is-on-or-after.decorator.js';
 
@@ -8,7 +9,7 @@ export class CalendarQueryDto {
 
   @IsDateString({ strict: true })
   @IsOnOrAfter('from', {
-    message: 'La fin de la période doit suivre son début.',
+    message: 'validation.periodEndBeforeStart' satisfies MessageKey,
   })
   to: string;
 }

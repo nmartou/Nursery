@@ -1,3 +1,4 @@
+import type { MessageKey } from '../../../common/i18n/messages.js';
 import {
   IsDateString,
   IsIn,
@@ -22,7 +23,7 @@ export class SaveAbsenceDto {
 
   @IsDateString({ strict: true })
   @IsOnOrAfter('startDate', {
-    message: "Le dernier jour d'absence doit suivre le premier.",
+    message: 'validation.absenceEndBeforeStart' satisfies MessageKey,
   })
   endDate: string;
 

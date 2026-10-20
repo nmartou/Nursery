@@ -17,9 +17,10 @@ import {
   ValidateNested,
   validate,
 } from 'class-validator';
+import { translate } from '../i18n/messages.js';
 import {
+  validationDetails,
   validationExceptionFactory,
-  validationMessages,
 } from './validation-exception.factory.js';
 
 class Parent {
@@ -54,7 +55,7 @@ class Form {
   @ArrayMaxSize(2)
   tags: unknown;
 
-  @IsNotEmpty({ message: 'Précisez la raison.' })
+  @IsNotEmpty({ message: 'validation.stoolCommentRequired' })
   reason: unknown;
 
   @ValidateNested({ each: true })
@@ -74,9 +75,10 @@ const VALID = {
   parents: [{ email: 'claire@example.com' }],
 };
 
+/** The failed constraints, as French messages. */
 async function messagesFor(values: Record<string, unknown>) {
   const errors = await validate(plainToInstance(Form, { ...VALID, ...values }));
-  return validationMessages(errors);
+  return validationDetails(errors).map((d) => translate('fr', d.code, d.params));
 }
 
 describe('validationExceptionFactory', () => {
@@ -109,46 +111,35 @@ describe('validationExceptionFactory', () => {
     ]);
   });
 
-  it('keeps the messages written in the DTO', async () => {
+  it('uses the message key given by the DTO', async () => {
     await expect(messagesFor({ reason: '' })).resolves.toEqual([
-      'Précisez la raison.',
+      "Précisez l'aspect des selles quand elles ne sont pas normales.",
     ]);
   });
 
-  it('keeps a DTO message that happens to contain the property name', () => {
+  it('falls back to a generic key for an unknown constraint', () => {
     expect(
-      validationMessages([
-        {
-          property: 'phone',
-          constraints: { matches: 'Le numéro de téléphone est invalide.' },
-          children: [],
-        },
-      ]),
-    ).toEqual(['Le numéro de téléphone est invalide.']);
-  });
-
-  it('falls back to a generic wording for an unknown constraint', () => {
-    expect(
-      validationMessages([
+      validationDetails([
         {
           property: 'code',
           constraints: { isPostalCode: 'code must be a postal code' },
           children: [],
         },
       ]),
-    ).toEqual(['« code » est invalide.']);
+    ).toEqual([{ code: 'validation.invalid', params: { field: 'code' } }]);
   });
 
-  it('builds a 400 with every message', async () => {
+  it('builds a 400 with one detail per failed constraint', async () => {
     const errors = await validate(
       plainToInstance(Form, { ...VALID, name: '', kind: 'c' }),
     );
     const exception = validationExceptionFactory(errors);
     expect(exception.getStatus()).toBe(400);
-    expect(exception.getResponse()).toMatchObject({
-      message: [
-        '« name » est obligatoire.',
-        '« kind » contient une valeur non autorisée.',
+    expect(exception.getResponse()).toEqual({
+      code: 'validation.failed',
+      details: [
+        { code: 'validation.isNotEmpty', params: { field: 'name' } },
+        { code: 'validation.isIn', params: { field: 'kind' } },
       ],
     });
   });

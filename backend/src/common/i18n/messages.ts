@@ -22,6 +22,7 @@ const EN = {
   'database.invalidValue': 'Some of the values are not allowed.',
 
   // --- Validation ------------------------------------------------------------
+  'validation.failed': 'Some of the information is not valid.',
   'validation.isNotEmpty': '"{field}" is required.',
   'validation.isString': '"{field}" must be a text.',
   'validation.maxLength': '"{field}" must not exceed {n} characters.',
@@ -89,6 +90,7 @@ const FR: Record<MessageKey, string> = {
     "Cette modification concerne des données qui n'existent plus. Rechargez la page.",
   'database.invalidValue': 'Certaines valeurs ne sont pas autorisées.',
 
+  'validation.failed': 'Certaines informations ne sont pas valides.',
   'validation.isNotEmpty': '« {field} » est obligatoire.',
   'validation.isString': '« {field} » doit être un texte.',
   'validation.maxLength': '« {field} » ne doit pas dépasser {n} caractères.',

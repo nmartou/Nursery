@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import { plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
-import { validationMessages } from '../../../common/validation/validation-exception.factory.js';
+import { translate } from '../../../common/i18n/messages.js';
+import { validationDetails } from '../../../common/validation/validation-exception.factory.js';
 import { SAVE_CHILD_PAYLOAD } from '../testing/child.fixtures.js';
 import { SaveChildDto } from './save-child.dto.js';
 
@@ -29,11 +30,11 @@ describe('SaveChildDto', () => {
     expect(await errorsFor({ enrollmentEnd: '2026-09-01' })).toEqual([]);
   });
 
-  it('rejects an end date before the start, with a French message', async () => {
+  it('rejects an end date before the start, with its message key', async () => {
     expect(await errorsFor({ enrollmentEnd: '2026-08-31' })).toEqual([
       {
         property: 'enrollmentEnd',
-        messages: ["La fin d'inscription doit suivre le début."],
+        messages: ['validation.enrollmentEndBeforeStart'],
       },
     ]);
   });
@@ -45,13 +46,13 @@ describe('SaveChildDto', () => {
 
   it('requires at least one parent and distinct emails', async () => {
     expect((await errorsFor({ parents: [] }))[0].messages).toContain(
-      'Au moins un parent responsable est requis.',
+      'validation.parentRequired',
     );
     const twice = await errorsFor({
       parents: [parent, { ...parent, email: 'claire.MARTIN@example.com ' }],
     });
     expect(twice[0].messages).toContain(
-      'Chaque parent doit avoir une adresse e-mail différente.',
+      'validation.parentEmailsUnique',
     );
   });
 
@@ -81,7 +82,9 @@ describe('SaveChildDto', () => {
       ...SAVE_CHILD_PAYLOAD,
       parents: [{ ...parent, email: 'not-an-email', phone: '12' }],
     });
-    expect(validationMessages(await validate(dto))).toEqual([
+    expect(validationDetails(await validate(dto)).map((d) =>
+    translate('fr', d.code, d.params),
+  )).toEqual([
       '« parents.0.email » doit être une adresse e-mail valide.',
       'Le numéro de téléphone ne peut contenir que des chiffres, des espaces et + ( ) . -.',
     ]);

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
@@ -158,7 +157,10 @@ describe('CalendarService', () => {
       repository.findClosuresBetween.mockClear();
       await expect(
         service.events('2026-01-01', '2027-03-01'),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      ).rejects.toMatchObject({
+        status: 400,
+        response: { code: 'calendar.periodTooLong' },
+      });
       expect(repository.findClosuresBetween).not.toHaveBeenCalled();
     });
   });
@@ -181,9 +183,9 @@ describe('CalendarService', () => {
 
     it('deletes a closure, or throws NotFound', async () => {
       await expect(service.deleteClosure('cl1')).resolves.toBeUndefined();
-      await expect(service.deleteClosure('unknown')).rejects.toThrow(
-        new NotFoundException("Cette fermeture n'existe pas ou a été supprimée."),
-      );
+      await expect(service.deleteClosure('unknown')).rejects.toMatchObject({
+        response: { code: 'closure.notFound' },
+      });
     });
   });
 
@@ -215,7 +217,7 @@ describe('CalendarService', () => {
     it('refuses an unknown child', async () => {
       await expect(
         service.createAbsence({ ...ABSENCE_DTO, childId: 'unknown' }),
-      ).rejects.toThrow("Cet enfant n'existe pas.");
+      ).rejects.toMatchObject({ response: { code: 'absence.unknownChild' } });
       expect(repository.createAbsence).not.toHaveBeenCalled();
     });
 
@@ -225,7 +227,10 @@ describe('CalendarService', () => {
     ])('refuses an absence %s', async (_, startDate, endDate) => {
       await expect(
         service.createAbsence({ ...ABSENCE_DTO, startDate, endDate }),
-      ).rejects.toBeInstanceOf(BadRequestException);
+      ).rejects.toMatchObject({
+        status: 400,
+        response: { code: 'absence.outsideEnrollment' },
+      });
       expect(repository.createAbsence).not.toHaveBeenCalled();
     });
 
@@ -243,6 +248,10 @@ describe('CalendarService', () => {
       await expect(service.createAbsence(ABSENCE_DTO)).rejects.toBeInstanceOf(
         ConflictException,
       );
+      repository.hasOverlappingAbsence.mockResolvedValueOnce(true);
+      await expect(service.createAbsence(ABSENCE_DTO)).rejects.toMatchObject({
+        response: { code: 'absence.overlap' },
+      });
       expect(repository.createAbsence).not.toHaveBeenCalled();
     });
 
@@ -273,9 +282,9 @@ describe('CalendarService', () => {
 
     it('deletes an absence, or throws NotFound', async () => {
       await expect(service.deleteAbsence('a1')).resolves.toBeUndefined();
-      await expect(service.deleteAbsence('unknown')).rejects.toThrow(
-        new NotFoundException("Cette absence n'existe pas ou a été supprimée."),
-      );
+      await expect(service.deleteAbsence('unknown')).rejects.toMatchObject({
+        response: { code: 'absence.notFound' },
+      });
     });
   });
 });

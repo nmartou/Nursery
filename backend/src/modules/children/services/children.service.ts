@@ -5,8 +5,7 @@ import { ChildListResponseDto } from '../dtos/child-summary.dto.js';
 import { SaveChildDto } from '../dtos/save-child.dto.js';
 import { ChildMapper } from '../mappers/child.mapper.js';
 import { ChildRepository } from '../repositories/child.repository.js';
-
-const CHILD_NOT_FOUND = "Cet enfant n'existe pas ou a été supprimé.";
+import { apiError } from '../../../common/i18n/api-error.js';
 
 @Injectable()
 export class ChildrenService {
@@ -25,7 +24,7 @@ export class ChildrenService {
   async getById(id: string, now: Date = new Date()): Promise<ChildResponseDto> {
     const child = await this.repository.findById(id);
     if (!child) {
-      throw new NotFoundException(CHILD_NOT_FOUND);
+      throw new NotFoundException(apiError('child.notFound'));
     }
     return ChildMapper.toResponseDto(child, toIsoDate(now));
   }
@@ -45,7 +44,7 @@ export class ChildrenService {
   ): Promise<ChildResponseDto> {
     const child = await this.repository.update(id, ChildMapper.toInput(dto));
     if (!child) {
-      throw new NotFoundException(CHILD_NOT_FOUND);
+      throw new NotFoundException(apiError('child.notFound'));
     }
     return ChildMapper.toResponseDto(child, toIsoDate(now));
   }

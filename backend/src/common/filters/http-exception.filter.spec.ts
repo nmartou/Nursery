@@ -1,23 +1,32 @@
 import {
   type ArgumentsHost,
   BadRequestException,
+  ConflictException,
   HttpException,
   Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { apiError } from '../i18n/api-error.js';
 import { HttpExceptionFilter } from './http-exception.filter.js';
 
-function createHost() {
+function createHost(acceptLanguage?: string) {
   const response = {
     status: vi.fn(),
     json: vi.fn(),
   };
   response.status.mockReturnValue(response);
+  const request = {
+    method: 'POST',
+    // Routed: the global prefix is gone from `url`.
+    url: '/absences',
+    originalUrl: '/api/absences',
+    headers: { 'accept-language': acceptLanguage },
+  };
   const host = {
     switchToHttp: () => ({
       getResponse: () => response,
-      getRequest: () => ({ method: 'GET', url: '/api/children/c1' }),
+      getRequest: () => request,
     }),
   } as unknown as ArgumentsHost;
   return { host, response };
@@ -26,10 +35,14 @@ function createHost() {
 describe('HttpExceptionFilter', () => {
   const filter = new HttpExceptionFilter();
   let logError: ReturnType<typeof vi.spyOn>;
+  let logWarn: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     logError = vi
       .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+    logWarn = vi
+      .spyOn(Logger.prototype, 'warn')
       .mockImplementation(() => undefined);
   });
 
@@ -38,8 +51,8 @@ describe('HttpExceptionFilter', () => {
   });
 
   /** Sends the exception through the filter; returns the status and the body. */
-  function send(exception: unknown) {
-    const { host, response } = createHost();
+  function send(exception: unknown, acceptLanguage?: string) {
+    const { host, response } = createHost(acceptLanguage);
     filter.catch(exception, host);
     return {
       status: response.status.mock.calls[0][0] as number,
@@ -47,73 +60,122 @@ describe('HttpExceptionFilter', () => {
     };
   }
 
-  it('sends the status and the message of an HTTP exception, flattened', () => {
-    const { status, body } = send(
-      new NotFoundException("Cet enfant n'existe pas."),
-    );
+  describe('errors raised by the application', () => {
+    const overlap = () => new ConflictException(apiError('absence.overlap'));
 
-    expect(status).toBe(404);
-    expect(body).toEqual({
-      statusCode: 404,
-      error: 'Not Found',
-      messages: ["Cet enfant n'existe pas."],
-      path: '/api/children/c1',
-      timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+    it('answers in the language of the request', () => {
+      const { status, body } = send(overlap(), 'fr-FR,fr;q=0.9');
+
+      expect(status).toBe(409);
+      expect(body).toEqual({
+        statusCode: 409,
+        error: 'Conflict',
+        code: 'absence.overlap',
+        messages: [
+          'Une absence est déjà prévue pour cet enfant sur cette période.',
+        ],
+        path: '/api/absences',
+        timestamp: expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/),
+      });
+      expect(logError).not.toHaveBeenCalled();
     });
-    expect(logError).not.toHaveBeenCalled();
-  });
 
-  it('sends every validation message', () => {
-    const { body } = send(
-      new BadRequestException(['Prénom obligatoire.', 'E-mail invalide.']),
-    );
-    expect(body).toMatchObject({
-      statusCode: 400,
-      error: 'Bad Request',
-      messages: ['Prénom obligatoire.', 'E-mail invalide.'],
+    it('answers in English by default', () => {
+      expect(send(overlap()).body.messages).toEqual([
+        'An absence is already planned for this child over this period.',
+      ]);
+      expect(send(overlap(), 'de-DE').body.messages).toEqual([
+        'An absence is already planned for this child over this period.',
+      ]);
+    });
+
+    it('sends one message per detail, with its parameters', () => {
+      const { body } = send(
+        new BadRequestException(
+          apiError('validation.failed', undefined, [
+            { code: 'validation.isNotEmpty', params: { field: 'label' } },
+            { code: 'validation.closureEndBeforeStart' },
+          ]),
+        ),
+        'fr',
+      );
+      expect(body).toMatchObject({
+        statusCode: 400,
+        code: 'validation.failed',
+        messages: [
+          '« label » est obligatoire.',
+          'Le dernier jour de fermeture doit suivre le premier.',
+        ],
+      });
+    });
+
+    it('logs the server errors raised on purpose, and keeps their message', () => {
+      const { status, body } = send(
+        new ServiceUnavailableException(apiError('database.unavailable')),
+      );
+      expect(status).toBe(503);
+      expect(body.code).toBe('database.unavailable');
+      expect(logError).toHaveBeenCalled();
     });
   });
 
-  it('accepts an exception built from a plain string', () => {
-    const { status, body } = send(new HttpException('Trop tard.', 410));
-    expect(status).toBe(410);
-    expect(body).toMatchObject({ error: 'GONE', messages: ['Trop tard.'] });
-  });
-
-  it('falls back to a generic message when the exception has none', () => {
-    const { body } = send(new BadRequestException({ message: '' }));
-    expect(body.messages).toEqual(['La requête a été refusée.']);
-  });
-
-  it('hides an unexpected error from the client and logs its stack', () => {
-    const error = new Error('connection refused');
-
-    const { status, body } = send(error);
-
-    expect(status).toBe(500);
-    expect(body).toMatchObject({
-      statusCode: 500,
-      error: 'Internal Server Error',
-      messages: ['Une erreur inattendue est survenue. Réessayez plus tard.'],
+  describe('errors raised by Nest or Express', () => {
+    it('explains an unknown route', () => {
+      const { status, body } = send(
+        new NotFoundException('Cannot POST /api/absences'),
+        'fr',
+      );
+      expect(status).toBe(404);
+      expect(body).toMatchObject({
+        code: 'route.notFound',
+        messages: ["Cette adresse n'existe pas : POST /api/absences."],
+      });
     });
-    expect(JSON.stringify(body)).not.toContain('connection refused');
-    expect(logError).toHaveBeenCalledWith(
-      'GET /api/children/c1 -> 500',
-      error.stack,
-    );
+
+    it('replaces their English message by a generic one, kept in the logs', () => {
+      expect(send(new NotFoundException('Gone')).body).toMatchObject({
+        code: 'request.notFound',
+        messages: ['This resource does not exist.'],
+      });
+      expect(send(new HttpException('Too late', 410)).body).toMatchObject({
+        error: 'Gone',
+        code: 'request.invalid',
+      });
+      expect(logWarn).toHaveBeenCalledWith(
+        'POST /api/absences -> 410: "Too late"',
+      );
+    });
   });
 
-  it('logs a thrown value that is not an Error', () => {
-    expect(send('boom').status).toBe(500);
-    expect(logError).toHaveBeenCalledWith('GET /api/children/c1 -> 500', 'boom');
-  });
+  describe('unexpected errors', () => {
+    it('hides them from the client and logs their stack', () => {
+      const error = new Error('connection refused');
 
-  it('logs the server errors raised on purpose, and keeps their message', () => {
-    const { status, body } = send(
-      new ServiceUnavailableException('Base de données indisponible.'),
-    );
-    expect(status).toBe(503);
-    expect(body.messages).toEqual(['Base de données indisponible.']);
-    expect(logError).toHaveBeenCalled();
+      const { status, body } = send(error, 'fr');
+
+      expect(status).toBe(500);
+      expect(body).toMatchObject({
+        statusCode: 500,
+        error: 'Internal Server Error',
+        code: 'server.unexpected',
+        messages: ['Une erreur inattendue est survenue. Réessayez plus tard.'],
+      });
+      expect(JSON.stringify(body)).not.toContain('connection refused');
+      expect(logError).toHaveBeenCalledWith(
+        'POST /api/absences -> 500',
+        error.stack,
+      );
+    });
+
+    it('logs a thrown value that is not an Error', () => {
+      expect(send('boom').status).toBe(500);
+      expect(logError).toHaveBeenCalledWith('POST /api/absences -> 500', 'boom');
+    });
+
+    it('hides the message of a 5xx raised by Nest', () => {
+      expect(send(new HttpException('Pool exhausted', 502)).body).toMatchObject({
+        code: 'server.unexpected',
+      });
+    });
   });
 });

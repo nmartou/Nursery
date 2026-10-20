@@ -139,6 +139,9 @@ describe('DailyReportsService', () => {
     await expect(service.listForDate('2026-10-17')).rejects.toBeInstanceOf(
       BadRequestException,
     );
+    await expect(service.listForDate('2026-10-17')).rejects.toMatchObject({
+      response: { code: 'report.weekend' },
+    });
     expect(repository.ensureReportsForDate).not.toHaveBeenCalled();
   });
 
@@ -154,9 +157,9 @@ describe('DailyReportsService', () => {
     await expect(service.getById('unknown')).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    await expect(service.getById('unknown')).rejects.toThrow(
-      "Ce rapport n'existe pas.",
-    );
+    await expect(service.getById('unknown')).rejects.toMatchObject({
+      response: { code: 'report.notFound' },
+    });
     await expect(
       service.update('unknown', EMPTY_REPORT_CONTENT),
     ).rejects.toBeInstanceOf(NotFoundException);

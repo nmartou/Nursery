@@ -14,8 +14,7 @@ import { UpdateDailyReportDto } from '../dtos/update-daily-report.dto.js';
 import { DailyReportMapper } from '../mappers/daily-report.mapper.js';
 import type { ReportStatus } from '../models/daily-report.model.js';
 import { DailyReportRepository } from '../repositories/daily-report.repository.js';
-
-const REPORT_NOT_FOUND = "Ce rapport n'existe pas.";
+import { apiError } from '../../../common/i18n/api-error.js';
 
 @Injectable()
 export class DailyReportsService {
@@ -29,7 +28,7 @@ export class DailyReportsService {
     date: string = mostRecentWeekday(),
   ): Promise<DailyReportListResponseDto> {
     if (!isWeekday(date)) {
-      throw new BadRequestException('La crèche est fermée le week-end.');
+      throw new BadRequestException(apiError('report.weekend'));
     }
     const closure = await this.repository.closureOn(date);
     if (closure) {
@@ -67,7 +66,7 @@ export class DailyReportsService {
   async getById(id: string): Promise<DailyReportResponseDto> {
     const report = await this.repository.findById(id);
     if (!report) {
-      throw new NotFoundException(REPORT_NOT_FOUND);
+      throw new NotFoundException(apiError('report.notFound'));
     }
     return DailyReportMapper.toResponseDto(report);
   }
@@ -81,7 +80,7 @@ export class DailyReportsService {
       DailyReportMapper.toContent(dto),
     );
     if (!report) {
-      throw new NotFoundException(REPORT_NOT_FOUND);
+      throw new NotFoundException(apiError('report.notFound'));
     }
     return DailyReportMapper.toResponseDto(report);
   }

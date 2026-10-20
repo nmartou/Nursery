@@ -14,6 +14,7 @@ import {
   MaxLength,
   ValidateNested,
 } from 'class-validator';
+import type { MessageKey } from '../../../common/i18n/messages.js';
 import { IsOnOrAfter } from '../../../common/validation/is-on-or-after.decorator.js';
 import { Trim } from '../../../common/validation/trim.decorator.js';
 import type { ParentRelationship } from '../models/child.model.js';
@@ -27,8 +28,7 @@ const PARENT_RELATIONSHIPS: ParentRelationship[] = [
 
 /** Digits, spaces and + ( ) . - only, e.g. "06 12 34 56 78" or "+33 6 12 34 56 78". */
 const PHONE_PATTERN = /^\+?[0-9 ().-]{6,30}$/;
-const PHONE_MESSAGE =
-  'Le numéro de téléphone ne peut contenir que des chiffres, des espaces et + ( ) . -.';
+const PHONE_MESSAGE = 'validation.phone' satisfies MessageKey;
 
 export class SaveParentDto {
   @Trim()
@@ -100,7 +100,7 @@ export class SaveChildDto {
 
   @IsDateString({ strict: true })
   @IsOnOrAfter('birthDate', {
-    message: "La date d'inscription ne peut pas précéder la naissance.",
+    message: 'validation.enrollmentBeforeBirth' satisfies MessageKey,
   })
   enrollmentStart: string;
 
@@ -108,15 +108,17 @@ export class SaveChildDto {
   @IsOptional()
   @IsDateString({ strict: true })
   @IsOnOrAfter('enrollmentStart', {
-    message: "La fin d'inscription doit suivre le début.",
+    message: 'validation.enrollmentEndBeforeStart' satisfies MessageKey,
   })
   enrollmentEnd: string | null;
 
   @IsArray()
-  @ArrayMinSize(1, { message: 'Au moins un parent responsable est requis.' })
+  @ArrayMinSize(1, {
+    message: 'validation.parentRequired' satisfies MessageKey,
+  })
   @ArrayMaxSize(4)
   @ArrayUnique((parent: SaveParentDto) => parent.email?.toLowerCase(), {
-    message: 'Chaque parent doit avoir une adresse e-mail différente.',
+    message: 'validation.parentEmailsUnique' satisfies MessageKey,
   })
   @ValidateNested({ each: true })
   @Type(() => SaveParentDto)

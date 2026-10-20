@@ -1,3 +1,4 @@
+import type { MessageKey } from '../../../common/i18n/messages.js';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -16,7 +17,7 @@ import {
 import type { StoolStatus } from '../models/daily-report.model.js';
 
 const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
-const TIME_MESSAGE = 'Les heures doivent être au format HH:mm (ex. 08:30).';
+const TIME_MESSAGE = 'validation.time' satisfies MessageKey;
 
 export class MealDto {
   @IsString()
@@ -101,7 +102,7 @@ export class UpdateDailyReportDto {
   @ValidateIf((dto: UpdateDailyReportDto) => dto.stoolStatus === 'other')
   @IsString()
   @IsNotEmpty({
-    message: "Précisez l'aspect des selles quand elles ne sont pas normales.",
+    message: 'validation.stoolCommentRequired' satisfies MessageKey,
   })
   @MaxLength(500)
   stoolComment: string | null;

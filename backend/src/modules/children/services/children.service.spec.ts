@@ -123,9 +123,9 @@ describe('ChildrenService', () => {
     await expect(service.getById('unknown', NOW)).rejects.toBeInstanceOf(
       NotFoundException,
     );
-    await expect(service.getById('unknown', NOW)).rejects.toThrow(
-      "Cet enfant n'existe pas ou a été supprimé.",
-    );
+    await expect(service.getById('unknown', NOW)).rejects.toMatchObject({
+      response: { code: 'child.notFound' },
+    });
     await expect(service.update('unknown', DTO, NOW)).rejects.toBeInstanceOf(
       NotFoundException,
     );

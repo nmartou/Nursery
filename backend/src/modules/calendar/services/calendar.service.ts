@@ -15,12 +15,10 @@ import type { SaveClosureDto } from '../dtos/save-closure.dto.js';
 import { CalendarMapper } from '../mappers/calendar.mapper.js';
 import type { AbsenceInput } from '../models/calendar.model.js';
 import { CalendarRepository } from '../repositories/calendar.repository.js';
+import { apiError } from '../../../common/i18n/api-error.js';
 
 /** Longest period one request may cover (a year, plus the weeks around it). */
 const MAX_PERIOD_DAYS = 400;
-
-const CLOSURE_NOT_FOUND = "Cette fermeture n'existe pas ou a été supprimée.";
-const ABSENCE_NOT_FOUND = "Cette absence n'existe pas ou a été supprimée.";
 
 function daysBetween(from: string, to: string): number {
   return (
@@ -39,9 +37,7 @@ export class CalendarService {
    */
   async events(from: string, to: string): Promise<CalendarResponseDto> {
     if (daysBetween(from, to) > MAX_PERIOD_DAYS) {
-      throw new BadRequestException(
-        'La période demandée ne peut pas dépasser un an.',
-      );
+      throw new BadRequestException(apiError('calendar.periodTooLong'));
     }
     const [closures, absences, reported, starts, ends] = await Promise.all([
       this.repository.findClosuresBetween(from, to),
@@ -77,14 +73,14 @@ export class CalendarService {
       this.closureInput(dto),
     );
     if (!closure) {
-      throw new NotFoundException(CLOSURE_NOT_FOUND);
+      throw new NotFoundException(apiError('closure.notFound'));
     }
     return CalendarMapper.toClosureDto(closure);
   }
 
   async deleteClosure(id: string): Promise<void> {
     if (!(await this.repository.deleteClosure(id))) {
-      throw new NotFoundException(CLOSURE_NOT_FOUND);
+      throw new NotFoundException(apiError('closure.notFound'));
     }
   }
 
@@ -103,20 +99,20 @@ export class CalendarService {
     dto: SaveAbsenceDto,
   ): Promise<AbsenceResponseDto> {
     if (!(await this.repository.findAbsenceById(id))) {
-      throw new NotFoundException(ABSENCE_NOT_FOUND);
+      throw new NotFoundException(apiError('absence.notFound'));
     }
     const input = CalendarMapper.toAbsenceInput(dto);
     await this.checkAbsence(input, id);
     const absence = await this.repository.updateAbsence(id, input);
     if (!absence) {
-      throw new NotFoundException(ABSENCE_NOT_FOUND);
+      throw new NotFoundException(apiError('absence.notFound'));
     }
     return CalendarMapper.toAbsenceDto(absence);
   }
 
   async deleteAbsence(id: string): Promise<void> {
     if (!(await this.repository.deleteAbsence(id))) {
-      throw new NotFoundException(ABSENCE_NOT_FOUND);
+      throw new NotFoundException(apiError('absence.notFound'));
     }
   }
 
@@ -131,20 +127,16 @@ export class CalendarService {
   ): Promise<void> {
     const enrollment = await this.repository.findEnrollment(input.childId);
     if (!enrollment) {
-      throw new BadRequestException("Cet enfant n'existe pas.");
+      throw new BadRequestException(apiError('absence.unknownChild'));
     }
     const withinEnrollment =
       input.startDate >= enrollment.start &&
       (enrollment.end === null || input.endDate <= enrollment.end);
     if (!withinEnrollment) {
-      throw new BadRequestException(
-        "L'absence doit être comprise dans la période d'inscription de l'enfant.",
-      );
+      throw new BadRequestException(apiError('absence.outsideEnrollment'));
     }
     if (await this.repository.hasOverlappingAbsence(input, exceptId)) {
-      throw new ConflictException(
-        'Une absence est déjà prévue pour cet enfant sur cette période.',
-      );
+      throw new ConflictException(apiError('absence.overlap'));
     }
   }
 }
