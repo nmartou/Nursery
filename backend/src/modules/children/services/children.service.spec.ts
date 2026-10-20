@@ -35,6 +35,78 @@ describe('ChildrenService', () => {
     ]);
   });
 
+  it('computes the status from the given day', async () => {
+    const list = await service.list(new Date(2026, 7, 31, 10, 0));
+    expect(list.children[0].enrollmentStatus).toBe('upcoming');
+  });
+
+  it('flags a child absent today in the list', async () => {
+    repository.findAll.mockResolvedValueOnce([
+      {
+        ...CHILD,
+        reportedAbsences: [{ reportId: 'r1', date: '2026-10-19', comment: null }],
+      },
+    ]);
+    const list = await service.list(NOW);
+    expect(list.children[0].currentAbsence).toMatchObject({
+      startDate: '2026-10-19',
+      source: 'report',
+    });
+  });
+
+  it('returns a child with its parents, contacts and absence history', async () => {
+    repository.findById.mockResolvedValueOnce({
+      ...CHILD,
+      absences: [
+        {
+          id: 'a1',
+          startDate: '2026-10-05',
+          endDate: '2026-10-06',
+          kind: 'vacation',
+          comment: null,
+        },
+      ],
+      reportedAbsences: [{ reportId: 'r1', date: '2026-10-15', comment: 'Fièvre' }],
+    });
+
+    const child = await service.getById('c1', NOW);
+
+    expect(child).toMatchObject({
+      id: 'c1',
+      enrollmentStatus: 'enrolled',
+      parents: [{ email: 'claire.martin@example.com' }],
+      contacts: [{ firstName: 'Jeanne' }],
+      createdAt: '2026-08-20T08:00:00.000Z',
+    });
+    expect(child.absences.map((a) => [a.startDate, a.source])).toEqual([
+      ['2026-10-15', 'report'],
+      ['2026-10-05', 'calendar'],
+    ]);
+  });
+
+  it('returns the created child', async () => {
+    await expect(service.create(DTO, NOW)).resolves.toMatchObject({
+      id: 'c1',
+      enrollmentStatus: 'enrolled',
+    });
+  });
+
+  it('replaces the child with the normalized registration', async () => {
+    await expect(service.update('c1', DTO, NOW)).resolves.toMatchObject({
+      id: 'c1',
+    });
+    expect(repository.update).toHaveBeenCalledWith(
+      'c1',
+      expect.objectContaining({
+        enrollmentEnd: null,
+        parents: [
+          expect.objectContaining({ email: 'claire.martin@example.com' }),
+        ],
+        contacts: [expect.objectContaining({ firstName: 'Jeanne' })],
+      }),
+    );
+  });
+
   it('saves the normalized registration', async () => {
     await service.create(DTO, NOW);
     expect(repository.create).toHaveBeenCalledWith(
