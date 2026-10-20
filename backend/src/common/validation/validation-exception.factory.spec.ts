@@ -117,6 +117,14 @@ describe('validationExceptionFactory', () => {
     ]);
   });
 
+  it('accepts an error without nested errors', () => {
+    expect(
+      validationDetails([
+        { property: 'kind', constraints: { isIn: 'kind must be one of: a, b' } },
+      ]),
+    ).toEqual([{ code: 'validation.isIn', params: { field: 'kind' } }]);
+  });
+
   it('falls back to a generic key for an unknown constraint', () => {
     expect(
       validationDetails([

@@ -214,6 +214,26 @@ describe('HttpExceptionFilter', () => {
     it('logs a thrown value that is not an Error', () => {
       expect(send('boom').status).toBe(500);
       expect(logError).toHaveBeenCalledWith('POST /api/absences -> 500', 'boom');
+      send({ reason: 'pool closed' });
+      expect(logError).toHaveBeenLastCalledWith(
+        'POST /api/absences -> 500',
+        '{"reason":"pool closed"}',
+      );
+    });
+
+    it('logs the message of an error without stack', () => {
+      const error = new Error('no stack');
+      delete error.stack;
+      send(error);
+      expect(logError).toHaveBeenCalledWith('POST /api/absences -> 500', 'no stack');
+    });
+
+    it('names an unusual status "Error"', () => {
+      expect(send(new HttpException('Closed', 499)).body).toMatchObject({
+        statusCode: 499,
+        error: 'Error',
+        code: 'request.invalid',
+      });
     });
 
     it('hides the message of a 5xx raised by Nest', () => {

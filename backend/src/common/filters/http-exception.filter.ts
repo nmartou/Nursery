@@ -96,7 +96,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
           details?: unknown;
           message?: unknown;
         };
-    const error = STATUS_CODES[status] ?? String(HttpStatus[status]);
+    const error = STATUS_CODES[status] ?? 'Error';
 
     // Raised by the application, with a message key.
     if (typeof body === 'object' && isMessageKey(body.code)) {
