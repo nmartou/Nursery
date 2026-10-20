@@ -1,8 +1,8 @@
 <app-dashboard-tile heading="Rapports du jour" [subtitle]="subtitle()">
   @if (loading()) {
     <p class="state">Chargement…</p>
-  } @else if (error()) {
-    <p class="state state--error">Impossible de charger les rapports du jour.</p>
+  } @else if (error(); as message) {
+    <p class="state state--error" role="alert">{{ message }}</p>
   } @else if (stats(); as stats) {
     @if (stats.closure) {
       <p class="state state--closed">Crèche fermée : {{ stats.closure }}.</p>

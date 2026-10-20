@@ -26,6 +26,8 @@ test.describe('Tableau de bord', () => {
     await MockApi.install(page, { offline: true });
     await page.goto('/accueil');
 
-    await expect(page.getByText('Impossible de charger les rapports du jour.')).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveText(
+      "Impossible de joindre l'API. Vérifiez que le backend est démarré.",
+    );
   });
 });

@@ -100,4 +100,27 @@ describe('DailyReportsTile', () => {
     expect(element.textContent).toContain('Impossible de charger les rapports du jour');
     expect(element.querySelector('a')?.getAttribute('href')).toBe('/rapports');
   });
+
+  it('says when the server cannot be reached', async () => {
+    http.expectOne(STATS_URL).error(new ProgressEvent('error'), { status: 0 });
+    await fixture.whenStable();
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      "Impossible de joindre l'API",
+    );
+  });
+
+  it('shows what the API explained', async () => {
+    http.expectOne(STATS_URL).flush(
+      {
+        statusCode: 503,
+        code: 'database.unavailable',
+        messages: ['La base de données est indisponible. Réessayez dans un instant.'],
+      },
+      { status: 503, statusText: 'Service Unavailable' },
+    );
+    await fixture.whenStable();
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      'La base de données est indisponible',
+    );
+  });
 });

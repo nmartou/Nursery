@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { formatLongDate } from '../../../../shared/utils/date.utils';
+import { httpErrorMessage } from '../../../../shared/utils/http-error.utils';
 import type { DailyReportStats, ReportStatus } from '../../models/daily-report-stats.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { DashboardTile } from '../dashboard-tile/dashboard-tile';
@@ -33,7 +34,7 @@ export class DailyReportsTile implements OnInit {
 
   protected readonly stats = signal<DailyReportStats | null>(null);
   protected readonly loading = signal(true);
-  protected readonly error = signal(false);
+  protected readonly error = signal<string | null>(null);
 
   protected readonly subtitle = computed(() => {
     const stats = this.stats();
@@ -59,8 +60,8 @@ export class DailyReportsTile implements OnInit {
         this.stats.set(stats);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set(true);
+      error: (error: unknown) => {
+        this.error.set(httpErrorMessage(error, 'dashboard.reportsLoadFailed'));
         this.loading.set(false);
       },
     });
