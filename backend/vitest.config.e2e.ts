@@ -16,7 +16,8 @@ export default defineConfig({
   test: {
     globals: true,
     root: './',
-    include: ['**/*.e2e-spec.ts'],
+    // HTTP tests (test/) and repository tests (src/, next to the repositories).
+    include: ['**/*.e2e-spec.ts', '**/*.db-spec.ts'],
     // Creates and migrates the test database before the run.
     globalSetup: ['./test/support/test-database.ts'],
     // The application under test talks to the test database only.

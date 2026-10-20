@@ -1,12 +1,12 @@
 import type { INestApplication } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
-import { sql } from 'drizzle-orm';
 import { AppModule } from '../../src/app.module.js';
 import { setupApp } from '../../src/app.setup.js';
 import { DRIZZLE } from '../../src/common/constants/injection-tokens.js';
 import type { Database } from '../../src/common/database/database.module.js';
 import type { AppConfig } from '../../src/config/app.config.js';
+import { resetDatabase } from './test-db.js';
 
 export interface TestApp {
   app: INestApplication;
@@ -24,7 +24,6 @@ export async function createTestApp(): Promise<TestApp> {
   await app.init();
 
   const db = app.get<Database>(DRIZZLE);
-  // Children (and their reports, contacts, absences) go with the nursery.
-  await db.execute(sql`TRUNCATE nursery, parent, closure CASCADE`);
+  await resetDatabase(db);
   return { app, db };
 }
