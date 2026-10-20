@@ -52,6 +52,14 @@ describe('absenceHistory', () => {
     ]);
   });
 
+  it('takes the comment of a later day when the first one has none', () => {
+    const history = absenceHistory(
+      [],
+      [day('2026-10-05'), day('2026-10-06', 'Varicelle')],
+    );
+    expect(history[0].comment).toBe('Varicelle');
+  });
+
   it('leaves out the report days covered by a planned absence', () => {
     const history = absenceHistory(
       [vacation],
