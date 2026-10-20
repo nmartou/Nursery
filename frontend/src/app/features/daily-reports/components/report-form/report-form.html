@@ -214,9 +214,7 @@
             [class.invalid]="isInvalid('stoolComment')"
           ></textarea>
           @if (isInvalid('stoolComment')) {
-            <small class="error"
-              >Un commentaire est obligatoire si les selles ne sont pas normales.</small
-            >
+            <small class="error">{{ 'report.stoolCommentRequired' | errorMessage }}</small>
           }
         </label>
       }

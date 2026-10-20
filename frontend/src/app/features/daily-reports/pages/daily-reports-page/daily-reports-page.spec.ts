@@ -77,4 +77,44 @@ describe('DailyReportsPage (integration)', () => {
     await render();
     expect(element.querySelector('app-report-form')).toBeNull();
   });
+
+  it('explains a refused save, keeping the form open', async () => {
+    await openHugo();
+    (element.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    http.expectOne(`${API}/r2`).flush(
+      {
+        statusCode: 400,
+        code: 'validation.failed',
+        messages: ["Précisez l'aspect des selles quand elles ne sont pas normales."],
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
+    await render();
+
+    expect(element.querySelector('app-report-form')).not.toBeNull();
+    expect(element.querySelector('app-report-form .error')?.textContent).toContain(
+      "Précisez l'aspect des selles",
+    );
+  });
+
+  it('says when the server cannot be reached while saving', async () => {
+    await openHugo();
+    (element.querySelector('button[type="submit"]') as HTMLButtonElement).click();
+    http.expectOne(`${API}/r2`).error(new ProgressEvent('error'), { status: 0 });
+    await render();
+
+    expect(element.querySelector('app-report-form .error')?.textContent).toContain(
+      "Impossible de joindre l'API",
+    );
+  });
+
+  it('says why a report cannot be opened', async () => {
+    element.querySelectorAll<HTMLButtonElement>('.row')[1].click();
+    http.expectOne(`${API}/r2`).flush('Bad gateway', { status: 502, statusText: 'Bad Gateway' });
+    await render();
+
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      'Impossible de charger le rapport.',
+    );
+  });
 });

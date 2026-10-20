@@ -14,6 +14,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { ErrorMessagePipe } from '../../../../shared/pipes/error-message.pipe';
 import { currentTime, formatLongDate, formatTime } from '../../../../shared/utils/date.utils';
 import type { DailyReport, DailyReportPayload, StoolStatus } from '../../models/daily-report.model';
 import { PLANNED_ABSENCE_LABELS } from '../../constants/report-status.constants';
@@ -23,7 +24,7 @@ import { ReportStatusBadge } from '../report-status-badge/report-status-badge';
 @Component({
   selector: 'app-report-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, ReportStatusBadge],
+  imports: [ReactiveFormsModule, ReportStatusBadge, ErrorMessagePipe],
   templateUrl: './report-form.html',
   styleUrl: './report-form.scss',
 })

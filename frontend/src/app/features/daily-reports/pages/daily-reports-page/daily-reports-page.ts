@@ -7,7 +7,9 @@ import {
   type OnInit,
   viewChild,
 } from '@angular/core';
+import { errorMessage } from '../../../../shared/i18n/error-messages';
 import { addWeekdays, formatLongDate, isWeekday } from '../../../../shared/utils/date.utils';
+import { httpErrorMessage } from '../../../../shared/utils/http-error.utils';
 import { ReportForm } from '../../components/report-form/report-form';
 import { ReportList } from '../../components/report-list/report-list';
 import type {
@@ -69,7 +71,7 @@ export class DailyReportsPage implements OnInit {
       return;
     }
     if (!isWeekday(value)) {
-      this.error.set('La crèche est fermée le week-end : choisissez un jour de semaine.');
+      this.error.set(errorMessage('reports.weekend'));
       return;
     }
     this.changeDate(value);
@@ -82,7 +84,7 @@ export class DailyReportsPage implements OnInit {
     this.saveError.set(null);
     this.reportsService.getById(id).subscribe({
       next: (report) => this.selected.set(report),
-      error: () => this.error.set('Impossible de charger le rapport.'),
+      error: (error: unknown) => this.error.set(httpErrorMessage(error, 'report.loadFailed')),
     });
   }
 
@@ -111,8 +113,8 @@ export class DailyReportsPage implements OnInit {
         );
         this.saving.set(false);
       },
-      error: () => {
-        this.saveError.set("L'enregistrement a échoué, réessayez.");
+      error: (error: unknown) => {
+        this.saveError.set(httpErrorMessage(error, 'api.saveFailed'));
         this.saving.set(false);
       },
     });
@@ -135,8 +137,8 @@ export class DailyReportsPage implements OnInit {
         this.reports.set(list.reports);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set("Impossible de joindre l'API. Vérifiez que le backend est démarré.");
+      error: (error: unknown) => {
+        this.error.set(httpErrorMessage(error, 'reports.loadFailed'));
         this.loading.set(false);
       },
     });
