@@ -1,4 +1,4 @@
-import type { INestApplication } from '@nestjs/common';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module.js';
@@ -9,7 +9,7 @@ import type { AppConfig } from '../../src/config/app.config.js';
 import { resetDatabase } from './test-db.js';
 
 export interface TestApp {
-  app: INestApplication;
+  app: NestExpressApplication;
   db: Database;
 }
 
@@ -19,7 +19,9 @@ export async function createTestApp(): Promise<TestApp> {
     imports: [AppModule],
   }).compile();
 
-  const app = moduleFixture.createNestApplication();
+  const app = moduleFixture.createNestApplication<NestExpressApplication>({
+    bodyParser: false,
+  });
   setupApp(app, app.get(ConfigService).getOrThrow<AppConfig>('app'));
   await app.init();
 

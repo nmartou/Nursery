@@ -80,4 +80,42 @@ describe('Error responses (e2e)', () => {
       messages: ['This identifier is not valid.'],
     });
   });
+
+  it('explain a malformed JSON body, with the CORS headers', async () => {
+    const res = await http()
+      .post('/api/closures')
+      .set('Origin', 'http://localhost:4200')
+      .set('Accept-Language', 'fr')
+      .set('Content-Type', 'application/json')
+      .send('{"label":')
+      .expect(400);
+
+    expect(res.headers['access-control-allow-origin']).toBe(
+      'http://localhost:4200',
+    );
+    expect(res.body).toMatchObject({
+      code: 'body.invalidJson',
+      messages: ["Le corps de la requête n'est pas un JSON valide."],
+    });
+  });
+
+  it('refuse a body that is too large', async () => {
+    const res = await http()
+      .post('/api/closures')
+      .send({ label: 'x'.repeat(200_000) })
+      .expect(413);
+
+    expect(res.body).toMatchObject({
+      statusCode: 413,
+      error: 'Payload Too Large',
+      code: 'body.tooLarge',
+    });
+  });
+
+  it('still parse a valid body', async () => {
+    await http()
+      .post('/api/closures')
+      .send({ startDate: '2026-11-09', endDate: '2026-11-10', label: 'Pont' })
+      .expect(201);
+  });
 });
