@@ -14,6 +14,7 @@ const testDatabase =
 export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
+    name: 'db',
     globals: true,
     root: './',
     // HTTP tests (test/) and repository tests (src/, next to the repositories).
