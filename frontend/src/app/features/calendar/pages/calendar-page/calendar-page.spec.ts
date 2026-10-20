@@ -70,6 +70,42 @@ describe('CalendarPage (integration)', () => {
       chip.textContent?.trim(),
     );
 
+  describe('when the calendar cannot be loaded', () => {
+    const showNextMonth = async () => {
+      element.querySelector<HTMLButtonElement>('[aria-label="Mois suivant"]')!.click();
+      await render();
+    };
+    const alert = () => element.querySelector('.page__error')?.textContent?.trim();
+
+    it('says when the server cannot be reached', async () => {
+      await showNextMonth();
+      calendarRequest().error(new ProgressEvent('error'), { status: 0 });
+      await render();
+      expect(alert()).toBe("Impossible de joindre l'API. Vérifiez que le backend est démarré.");
+    });
+
+    it('shows what the API explained', async () => {
+      await showNextMonth();
+      calendarRequest().flush(
+        {
+          statusCode: 400,
+          code: 'calendar.periodTooLong',
+          messages: ['La période demandée ne peut pas dépasser un an.'],
+        },
+        { status: 400, statusText: 'Bad Request' },
+      );
+      await render();
+      expect(alert()).toBe('La période demandée ne peut pas dépasser un an.');
+    });
+
+    it('falls back to its own message', async () => {
+      await showNextMonth();
+      calendarRequest().flush('Bad gateway', { status: 502, statusText: 'Bad Gateway' });
+      await render();
+      expect(alert()).toBe("Le calendrier n'a pas pu être chargé.");
+    });
+  });
+
   it('shows the month with its events, on every day they cover', () => {
     expect(element.querySelector('.month-nav__label')?.textContent).toContain('novembre 2026');
     expect(chipsOn('2026-11-04')).toEqual(['Léa Martin · Maladie']);
@@ -164,12 +200,14 @@ describe('CalendarPage (integration)', () => {
     dialog().querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     await render();
 
-    http
-      .expectOne(`${API}/absences`)
-      .flush(
-        { message: { message: 'Une absence est déjà prévue pour cet enfant sur cette période.' } },
-        { status: 409, statusText: 'Conflict' },
-      );
+    http.expectOne(`${API}/absences`).flush(
+      {
+        statusCode: 409,
+        code: 'absence.overlap',
+        messages: ['Une absence est déjà prévue pour cet enfant sur cette période.'],
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
     await render();
     expect(dialog().open).toBe(true);
     expect(dialog().querySelector('[role="alert"]')?.textContent).toContain(

@@ -16,6 +16,7 @@ import {
   type ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { ErrorMessagePipe } from '../../../../shared/pipes/error-message.pipe';
 import type { Closure, ClosurePayload } from '../../models/calendar.model';
 
 /** The last day cannot precede the first (same rule as the API). */
@@ -30,7 +31,7 @@ function periodValidator(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-closure-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ErrorMessagePipe],
   templateUrl: './closure-form.html',
   styleUrl: './closure-form.scss',
 })

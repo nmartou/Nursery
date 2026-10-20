@@ -16,6 +16,7 @@ import {
   type ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { ErrorMessagePipe } from '../../../../shared/pipes/error-message.pipe';
 import { formatShortDate } from '../../../../shared/utils/date.utils';
 import { ABSENCE_KIND_LABELS } from '../../constants/calendar.constants';
 import type {
@@ -45,7 +46,7 @@ function periodValidator(group: AbstractControl): ValidationErrors | null {
 @Component({
   selector: 'app-absence-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ErrorMessagePipe],
   templateUrl: './absence-form.html',
   styleUrl: './absence-form.scss',
 })

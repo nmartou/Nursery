@@ -241,6 +241,13 @@ function byName(
   return byLastName !== 0 ? byLastName : a.firstName.localeCompare(b.firstName);
 }
 
+const ERROR_NAMES: Record<number, string> = {
+  400: 'Bad Request',
+  404: 'Not Found',
+  409: 'Conflict',
+  500: 'Internal Server Error',
+};
+
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS',
@@ -347,7 +354,7 @@ export class MockApi {
     if (method === 'GET' && (path === '/daily-reports' || path === '/daily-reports/stats')) {
       const date = url.searchParams.get('date') ?? SEED_DATE;
       if (!isWeekday(date)) {
-        return this.json(route, 400, { message: 'La crèche est fermée le week-end.' });
+        return this.error(route, 400, 'report.weekend', 'La crèche est fermée le week-end.');
       }
       const closure = this.closureOn(date);
       if (!closure) {
@@ -386,7 +393,7 @@ export class MockApi {
     const match = /^\/daily-reports\/([^/]+)$/.exec(path);
     const report = match && this.reports.find((r) => r.id === match[1]);
     if (match && !report) {
-      return this.json(route, 404, { message: 'Not found' });
+      return this.error(route, 404, 'request.notFound', "Cette ressource n'existe pas.");
     }
     if (report && method === 'GET') {
       return this.json(route, 200, this.withPlannedAbsence(this.withChildName(report)));
@@ -397,7 +404,7 @@ export class MockApi {
       return this.json(route, 200, this.withPlannedAbsence(this.withChildName(report)));
     }
 
-    return this.json(route, 404, { message: `Unhandled ${method} ${path}` });
+    return this.error(route, 404, 'route.notFound', `Unhandled ${method} ${path}`);
   }
 
   private handleChildren(
@@ -443,7 +450,7 @@ export class MockApi {
 
     const child = this.children.find((c) => c.id === path.replace('/children/', ''));
     if (!child) {
-      return this.json(route, 404, { message: 'Not found' });
+      return this.error(route, 404, 'request.notFound', "Cette ressource n'existe pas.");
     }
     if (method === 'GET') {
       return this.json(route, 200, this.childDto(child));
@@ -452,7 +459,7 @@ export class MockApi {
       Object.assign(child, body, { updatedAt: this.now().toISOString() });
       return this.json(route, 200, this.childDto(child));
     }
-    return this.json(route, 404, { message: `Unhandled ${method} ${path}` });
+    return this.error(route, 404, 'route.notFound', `Unhandled ${method} ${path}`);
   }
 
   private childDto(child: MockChild) {
@@ -614,7 +621,7 @@ export class MockApi {
     }
     const index = this.closures.findIndex((c) => c.id === path.replace('/closures/', ''));
     if (index < 0) {
-      return this.json(route, 404, { message: 'Not found' });
+      return this.error(route, 404, 'request.notFound', "Cette ressource n'existe pas.");
     }
     if (method === 'PUT' && body) {
       Object.assign(this.closures[index], body);
@@ -624,7 +631,7 @@ export class MockApi {
       this.closures.splice(index, 1);
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
-    return this.json(route, 404, { message: `Unhandled ${method} ${path}` });
+    return this.error(route, 404, 'route.notFound', `Unhandled ${method} ${path}`);
   }
 
   private handleAbsences(
@@ -637,22 +644,25 @@ export class MockApi {
     if (method === 'DELETE') {
       const index = this.absences.findIndex((a) => a.id === id);
       if (index < 0) {
-        return this.json(route, 404, { message: 'Not found' });
+        return this.error(route, 404, 'request.notFound', "Cette ressource n'existe pas.");
       }
       this.absences.splice(index, 1);
       return route.fulfill({ status: 204, headers: CORS_HEADERS });
     }
     if (!body) {
-      return this.json(route, 400, { message: 'Bad Request' });
+      return this.error(route, 400, 'request.invalid', 'La requête a été refusée.');
     }
     // Same rules as the API: no overlap with another absence of the child.
     const overlapping = this.absences.some(
       (a) => a.childId === body.childId && a.id !== id && overlaps(a, body.startDate, body.endDate),
     );
     if (overlapping) {
-      return this.json(route, 409, {
-        message: { message: 'Une absence est déjà prévue pour cet enfant sur cette période.' },
-      });
+      return this.error(
+        route,
+        409,
+        'absence.overlap',
+        'Une absence est déjà prévue pour cet enfant sur cette période.',
+      );
     }
     const child = this.children.find((c) => c.id === body.childId)!;
     const names = { childFirstName: child.firstName, childLastName: child.lastName };
@@ -666,7 +676,19 @@ export class MockApi {
       Object.assign(absence, body);
       return this.json(route, 200, { ...absence, ...names });
     }
-    return this.json(route, 404, { message: 'Not found' });
+    return this.error(route, 404, 'request.notFound', "Cette ressource n'existe pas.");
+  }
+
+  /** An error in the format of the API (messages in French, as asked by the app). */
+  private error(route: Route, status: number, code: string, message: string): Promise<void> {
+    return this.json(route, status, {
+      statusCode: status,
+      error: ERROR_NAMES[status] ?? 'Error',
+      code,
+      messages: [message],
+      path: new URL(route.request().url()).pathname,
+      timestamp: new Date().toISOString(),
+    });
   }
 
   private json(route: Route, status: number, body: unknown): Promise<void> {

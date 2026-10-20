@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -16,6 +15,7 @@ import {
   shiftMonth,
   todayIsoDate,
 } from '../../../../shared/utils/date.utils';
+import { httpErrorMessage } from '../../../../shared/utils/http-error.utils';
 import { AbsenceForm } from '../../components/absence-form/absence-form';
 import { AgendaView } from '../../components/agenda-view/agenda-view';
 import { ClosureForm } from '../../components/closure-form/closure-form';
@@ -220,7 +220,7 @@ export class CalendarPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.saveError.set(saveErrorMessage(error));
+        this.saveError.set(httpErrorMessage(error, 'api.saveFailed'));
       },
     });
   }
@@ -236,8 +236,8 @@ export class CalendarPage implements OnInit {
         this.events.set(calendar.events);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set("Impossible de joindre l'API. Vérifiez que le backend est démarré.");
+      error: (error: unknown) => {
+        this.error.set(httpErrorMessage(error, 'calendar.loadFailed'));
         this.loading.set(false);
       },
     });
@@ -246,23 +246,7 @@ export class CalendarPage implements OnInit {
   private loadChildren(): void {
     this.calendarService.listChildren().subscribe({
       next: (children) => this.children.set(children),
-      error: () => this.saveError.set('Impossible de charger la liste des enfants.'),
+      error: (error: unknown) => this.saveError.set(httpErrorMessage(error, 'children.loadFailed')),
     });
   }
-}
-
-/**
- * The API explains refused changes in French (overlap, enrollment…), in
- * `{ message: { message: "…" } }` (or a list of validation messages).
- */
-function saveErrorMessage(error: unknown): string {
-  if (error instanceof HttpErrorResponse && (error.status === 400 || error.status === 409)) {
-    const body = error.error as { message?: { message?: unknown } | string } | null;
-    const detail = typeof body?.message === 'string' ? body.message : body?.message?.message;
-    if (typeof detail === 'string') {
-      return detail;
-    }
-    return 'Certaines informations sont refusées : vérifiez le formulaire.';
-  }
-  return "L'enregistrement a échoué, réessayez.";
 }

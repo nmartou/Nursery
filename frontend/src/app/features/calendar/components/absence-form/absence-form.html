@@ -27,7 +27,7 @@
         }
       </select>
       @if (isInvalid('childId')) {
-        <small class="error">Choisissez l'enfant.</small>
+        <small class="error">{{ 'absence.childRequired' | errorMessage }}</small>
       } @else if (enrollmentText(); as enrollment) {
         <small class="hint">{{ child()?.firstName }} est {{ enrollment }}.</small>
       }
@@ -50,7 +50,7 @@
         <span>Premier jour</span>
         <input type="date" formControlName="startDate" [class.invalid]="isInvalid('startDate')" />
         @if (isInvalid('startDate')) {
-          <small class="error">Le premier jour est obligatoire.</small>
+          <small class="error">{{ 'field.firstDayRequired' | errorMessage }}</small>
         }
       </label>
       <label class="field">
@@ -63,14 +63,14 @@
           "
         />
         @if (isInvalid('endDate')) {
-          <small class="error">Le dernier jour est obligatoire.</small>
+          <small class="error">{{ 'field.lastDayRequired' | errorMessage }}</small>
         } @else if (form.hasError('endBeforeStart')) {
-          <small class="error">Le dernier jour doit suivre le premier.</small>
+          <small class="error">{{ 'field.lastDayBeforeFirst' | errorMessage }}</small>
         }
       </label>
     </div>
     @if (outsideEnrollment()) {
-      <p class="error" role="alert">L'absence doit être comprise dans la période d'inscription.</p>
+      <p class="error" role="alert">{{ 'absence.outsideEnrollment' | errorMessage }}</p>
     }
 
     <label class="field">

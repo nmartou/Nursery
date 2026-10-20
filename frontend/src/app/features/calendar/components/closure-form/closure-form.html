@@ -28,7 +28,7 @@
         [class.invalid]="isInvalid('label')"
       />
       @if (isInvalid('label')) {
-        <small class="error">Le motif est obligatoire.</small>
+        <small class="error">{{ 'closure.labelRequired' | errorMessage }}</small>
       }
     </label>
 
@@ -37,7 +37,7 @@
         <span>Premier jour</span>
         <input type="date" formControlName="startDate" [class.invalid]="isInvalid('startDate')" />
         @if (isInvalid('startDate')) {
-          <small class="error">Le premier jour est obligatoire.</small>
+          <small class="error">{{ 'field.firstDayRequired' | errorMessage }}</small>
         }
       </label>
       <label class="field">
@@ -48,9 +48,9 @@
           [class.invalid]="isInvalid('endDate') || form.hasError('endBeforeStart')"
         />
         @if (isInvalid('endDate')) {
-          <small class="error">Le dernier jour est obligatoire.</small>
+          <small class="error">{{ 'field.lastDayRequired' | errorMessage }}</small>
         } @else if (form.hasError('endBeforeStart')) {
-          <small class="error">Le dernier jour doit suivre le premier.</small>
+          <small class="error">{{ 'field.lastDayBeforeFirst' | errorMessage }}</small>
         }
       </label>
     </div>
