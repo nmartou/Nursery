@@ -53,8 +53,12 @@ export function validationMessages(
   });
 }
 
+/** "email must be an email", "each value in tags must be…" */
 function isDefaultMessage(message: string, property: string): boolean {
-  return message.includes(property);
+  return (
+    message.startsWith(`${property} `) ||
+    message.startsWith(`each value in ${property} `)
+  );
 }
 
 function frenchMessage(constraint: string, english: string): string {

@@ -115,6 +115,18 @@ describe('validationExceptionFactory', () => {
     ]);
   });
 
+  it('keeps a DTO message that happens to contain the property name', () => {
+    expect(
+      validationMessages([
+        {
+          property: 'phone',
+          constraints: { matches: 'Le numéro de téléphone est invalide.' },
+          children: [],
+        },
+      ]),
+    ).toEqual(['Le numéro de téléphone est invalide.']);
+  });
+
   it('falls back to a generic wording for an unknown constraint', () => {
     expect(
       validationMessages([
