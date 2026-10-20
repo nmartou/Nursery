@@ -181,8 +181,8 @@ describe('CalendarService', () => {
 
     it('deletes a closure, or throws NotFound', async () => {
       await expect(service.deleteClosure('cl1')).resolves.toBeUndefined();
-      await expect(service.deleteClosure('unknown')).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(service.deleteClosure('unknown')).rejects.toThrow(
+        new NotFoundException("Cette fermeture n'existe pas ou a été supprimée."),
       );
     });
   });
@@ -273,8 +273,8 @@ describe('CalendarService', () => {
 
     it('deletes an absence, or throws NotFound', async () => {
       await expect(service.deleteAbsence('a1')).resolves.toBeUndefined();
-      await expect(service.deleteAbsence('unknown')).rejects.toBeInstanceOf(
-        NotFoundException,
+      await expect(service.deleteAbsence('unknown')).rejects.toThrow(
+        new NotFoundException("Cette absence n'existe pas ou a été supprimée."),
       );
     });
   });

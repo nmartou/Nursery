@@ -15,6 +15,8 @@ import { DailyReportMapper } from '../mappers/daily-report.mapper.js';
 import type { ReportStatus } from '../models/daily-report.model.js';
 import { DailyReportRepository } from '../repositories/daily-report.repository.js';
 
+const REPORT_NOT_FOUND = "Ce rapport n'existe pas.";
+
 @Injectable()
 export class DailyReportsService {
   constructor(private readonly repository: DailyReportRepository) {}
@@ -65,7 +67,7 @@ export class DailyReportsService {
   async getById(id: string): Promise<DailyReportResponseDto> {
     const report = await this.repository.findById(id);
     if (!report) {
-      throw new NotFoundException(`Daily report ${id} not found`);
+      throw new NotFoundException(REPORT_NOT_FOUND);
     }
     return DailyReportMapper.toResponseDto(report);
   }
@@ -79,7 +81,7 @@ export class DailyReportsService {
       DailyReportMapper.toContent(dto),
     );
     if (!report) {
-      throw new NotFoundException(`Daily report ${id} not found`);
+      throw new NotFoundException(REPORT_NOT_FOUND);
     }
     return DailyReportMapper.toResponseDto(report);
   }

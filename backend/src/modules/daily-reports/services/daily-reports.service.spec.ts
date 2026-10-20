@@ -154,6 +154,9 @@ describe('DailyReportsService', () => {
     await expect(service.getById('unknown')).rejects.toBeInstanceOf(
       NotFoundException,
     );
+    await expect(service.getById('unknown')).rejects.toThrow(
+      "Ce rapport n'existe pas.",
+    );
     await expect(
       service.update('unknown', EMPTY_REPORT_CONTENT),
     ).rejects.toBeInstanceOf(NotFoundException);

@@ -6,6 +6,8 @@ import { SaveChildDto } from '../dtos/save-child.dto.js';
 import { ChildMapper } from '../mappers/child.mapper.js';
 import { ChildRepository } from '../repositories/child.repository.js';
 
+const CHILD_NOT_FOUND = "Cet enfant n'existe pas ou a été supprimé.";
+
 @Injectable()
 export class ChildrenService {
   constructor(private readonly repository: ChildRepository) {}
@@ -23,7 +25,7 @@ export class ChildrenService {
   async getById(id: string, now: Date = new Date()): Promise<ChildResponseDto> {
     const child = await this.repository.findById(id);
     if (!child) {
-      throw new NotFoundException(`Child ${id} not found`);
+      throw new NotFoundException(CHILD_NOT_FOUND);
     }
     return ChildMapper.toResponseDto(child, toIsoDate(now));
   }
@@ -43,7 +45,7 @@ export class ChildrenService {
   ): Promise<ChildResponseDto> {
     const child = await this.repository.update(id, ChildMapper.toInput(dto));
     if (!child) {
-      throw new NotFoundException(`Child ${id} not found`);
+      throw new NotFoundException(CHILD_NOT_FOUND);
     }
     return ChildMapper.toResponseDto(child, toIsoDate(now));
   }

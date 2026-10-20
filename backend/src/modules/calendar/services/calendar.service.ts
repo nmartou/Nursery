@@ -19,6 +19,9 @@ import { CalendarRepository } from '../repositories/calendar.repository.js';
 /** Longest period one request may cover (a year, plus the weeks around it). */
 const MAX_PERIOD_DAYS = 400;
 
+const CLOSURE_NOT_FOUND = "Cette fermeture n'existe pas ou a été supprimée.";
+const ABSENCE_NOT_FOUND = "Cette absence n'existe pas ou a été supprimée.";
+
 function daysBetween(from: string, to: string): number {
   return (
     (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) /
@@ -74,14 +77,14 @@ export class CalendarService {
       this.closureInput(dto),
     );
     if (!closure) {
-      throw new NotFoundException(`Closure ${id} not found`);
+      throw new NotFoundException(CLOSURE_NOT_FOUND);
     }
     return CalendarMapper.toClosureDto(closure);
   }
 
   async deleteClosure(id: string): Promise<void> {
     if (!(await this.repository.deleteClosure(id))) {
-      throw new NotFoundException(`Closure ${id} not found`);
+      throw new NotFoundException(CLOSURE_NOT_FOUND);
     }
   }
 
@@ -100,20 +103,20 @@ export class CalendarService {
     dto: SaveAbsenceDto,
   ): Promise<AbsenceResponseDto> {
     if (!(await this.repository.findAbsenceById(id))) {
-      throw new NotFoundException(`Absence ${id} not found`);
+      throw new NotFoundException(ABSENCE_NOT_FOUND);
     }
     const input = CalendarMapper.toAbsenceInput(dto);
     await this.checkAbsence(input, id);
     const absence = await this.repository.updateAbsence(id, input);
     if (!absence) {
-      throw new NotFoundException(`Absence ${id} not found`);
+      throw new NotFoundException(ABSENCE_NOT_FOUND);
     }
     return CalendarMapper.toAbsenceDto(absence);
   }
 
   async deleteAbsence(id: string): Promise<void> {
     if (!(await this.repository.deleteAbsence(id))) {
-      throw new NotFoundException(`Absence ${id} not found`);
+      throw new NotFoundException(ABSENCE_NOT_FOUND);
     }
   }
 
