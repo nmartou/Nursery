@@ -7,6 +7,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import { DrizzleQueryError } from 'drizzle-orm';
 import { apiError } from '../i18n/api-error.js';
 import { HttpExceptionFilter } from './http-exception.filter.js';
 
@@ -143,6 +144,49 @@ describe('HttpExceptionFilter', () => {
       });
       expect(logWarn).toHaveBeenCalledWith(
         'POST /api/absences -> 410: "Too late"',
+      );
+    });
+  });
+
+  describe('database errors', () => {
+    const driverError = (code: string) =>
+      new DrizzleQueryError(
+        'insert into "child_absence" ...',
+        [],
+        Object.assign(new Error('violates foreign key constraint'), { code }),
+      );
+
+    it('answers a conflict, logged as a warning with its cause', () => {
+      const { status, body } = send(driverError('23503'), 'fr');
+
+      expect(status).toBe(409);
+      expect(body).toMatchObject({
+        code: 'database.missingReference',
+        messages: [
+          "Cette modification concerne des données qui n'existent plus. Rechargez la page.",
+        ],
+      });
+      expect(logError).not.toHaveBeenCalled();
+      expect(logWarn).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'Caused by: Error: violates foreign key constraint',
+        ),
+      );
+    });
+
+    it('reports an unreachable database as a 503, logged as an error', () => {
+      const error = driverError('ECONNREFUSED');
+
+      const { status, body } = send(error);
+
+      expect(status).toBe(503);
+      expect(body).toMatchObject({
+        error: 'Service Unavailable',
+        code: 'database.unavailable',
+      });
+      expect(logError).toHaveBeenCalledWith(
+        'POST /api/absences -> 503',
+        expect.stringContaining('Failed query'),
       );
     });
   });

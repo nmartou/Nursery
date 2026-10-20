@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { STATUS_CODES } from 'node:http';
+import { databaseException } from '../database/database-errors.js';
 import type { ApiErrorDetail } from '../i18n/api-error.js';
 import {
   isMessageKey,
@@ -55,10 +56,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const { status, error, code, details } = this.describe(exception, request);
     if (status >= 500) {
-      this.logger.error(
-        `${request.method} ${path} -> ${status}`,
-        exception instanceof Error ? exception.stack : String(exception),
-      );
+      this.logger.error(`${request.method} ${path} -> ${status}`, trace(exception));
     }
 
     const language = languageFrom(request.headers['accept-language']);
@@ -77,7 +75,17 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
   private describe(exception: unknown, request: Request): ErrorDescription {
     if (!(exception instanceof HttpException)) {
-      return unexpected();
+      // A database error is answered as such (409, 400, 503).
+      const translated = databaseException(exception);
+      if (!translated) {
+        return unexpected();
+      }
+      if (translated.getStatus() < 500) {
+        this.logger.warn(
+          `${request.method} ${request.originalUrl} -> ${translated.getStatus()}: ${trace(exception)}`,
+        );
+      }
+      return this.describe(translated, request);
     }
     const status = exception.getStatus();
     const body = exception.getResponse() as
@@ -113,6 +121,25 @@ export class HttpExceptionFilter implements ExceptionFilter {
         : undefined;
     return { status, error, code, details: [{ code, params }] };
   }
+}
+
+/** Stack of an error and of its causes (Drizzle wraps the driver's error). */
+function trace(exception: unknown): string {
+  const lines: string[] = [];
+  for (
+    let current: unknown = exception, depth = 0;
+    current !== undefined && depth < 5;
+    current = current instanceof Error ? current.cause : undefined, depth++
+  ) {
+    const text =
+      current instanceof Error
+        ? (current.stack ?? current.message)
+        : typeof current === 'string'
+          ? current
+          : JSON.stringify(current);
+    lines.push(depth === 0 ? text : `Caused by: ${text}`);
+  }
+  return lines.join('\n');
 }
 
 function unexpected(): ErrorDescription {
