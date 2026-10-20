@@ -129,14 +129,52 @@ describe('ChildrenPage (integration)', () => {
 
     dialog().querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
     await render();
-    http
-      .expectOne(`${API}/c1`)
-      .flush({ message: ['…'] }, { status: 400, statusText: 'Bad Request' });
+    http.expectOne(`${API}/c1`).flush(
+      {
+        statusCode: 400,
+        code: 'validation.failed',
+        messages: ['« parents.0.email » doit être une adresse e-mail valide.'],
+      },
+      { status: 400, statusText: 'Bad Request' },
+    );
     await render();
 
     expect(dialog().open).toBe(true);
     expect(dialog().querySelector('[role="alert"]')?.textContent).toContain(
-      'Certaines informations sont refusées',
+      '« parents.0.email » doit être une adresse e-mail valide.',
+    );
+  });
+
+  it('says why a child cannot be opened', async () => {
+    element.querySelector<HTMLButtonElement>('.row')?.click();
+    http.expectOne(`${API}/c1`).flush(
+      {
+        statusCode: 404,
+        code: 'child.notFound',
+        messages: ["Cet enfant n'existe pas ou a été supprimé."],
+      },
+      { status: 404, statusText: 'Not Found' },
+    );
+    await render();
+
+    expect(dialog()?.open ?? false).toBe(false);
+    expect(element.querySelector('.page__error')?.textContent).toContain(
+      "Cet enfant n'existe pas ou a été supprimé.",
+    );
+  });
+
+  it('says when the server cannot be reached while saving', async () => {
+    element.querySelector<HTMLButtonElement>('.row')?.click();
+    http.expectOne(`${API}/c1`).flush(buildChild());
+    await render();
+
+    dialog().querySelector<HTMLButtonElement>('button[type="submit"]')?.click();
+    await render();
+    http.expectOne(`${API}/c1`).error(new ProgressEvent('error'), { status: 0 });
+    await render();
+
+    expect(dialog().querySelector('[role="alert"]')?.textContent).toContain(
+      "Impossible de joindre l'API",
     );
   });
 
@@ -176,5 +214,19 @@ describe('ChildrenPage (integration)', () => {
     await render();
     expect(dialog().open).toBe(false);
     confirm.mockRestore();
+  });
+
+  it('falls back to its own message when the list cannot be loaded', async () => {
+    // A new page, whose list fails to load.
+    fixture.destroy();
+    fixture = TestBed.createComponent(ChildrenPage);
+    element = fixture.nativeElement as HTMLElement;
+    await render();
+    http.expectOne(API).flush('Bad gateway', { status: 502, statusText: 'Bad Gateway' });
+    await render();
+
+    expect(element.querySelector('.page__error')?.textContent).toContain(
+      "La liste des enfants n'a pas pu être chargée.",
+    );
   });
 });

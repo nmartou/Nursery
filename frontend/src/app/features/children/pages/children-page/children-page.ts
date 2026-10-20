@@ -1,4 +1,3 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -9,6 +8,7 @@ import {
   type OnInit,
 } from '@angular/core';
 import { ModalDialog } from '../../../../shared/components/modal-dialog/modal-dialog';
+import { httpErrorMessage } from '../../../../shared/utils/http-error.utils';
 import { ChildForm } from '../../components/child-form/child-form';
 import { ChildList } from '../../components/child-list/child-list';
 import { ENROLLMENT_FILTERS } from '../../constants/child.constants';
@@ -93,7 +93,7 @@ export class ChildrenPage implements OnInit {
     this.notice.set(null);
     this.childrenService.getById(id).subscribe({
       next: (child) => this.editing.set({ child }),
-      error: () => this.error.set("Impossible de charger l'inscription de cet enfant."),
+      error: (error: unknown) => this.error.set(httpErrorMessage(error, 'child.loadFailed')),
     });
   }
 
@@ -135,11 +135,7 @@ export class ChildrenPage implements OnInit {
       },
       error: (error: unknown) => {
         this.saving.set(false);
-        this.saveError.set(
-          error instanceof HttpErrorResponse && error.status === 400
-            ? 'Certaines informations sont refusées : vérifiez le formulaire.'
-            : "L'enregistrement a échoué, réessayez.",
-        );
+        this.saveError.set(httpErrorMessage(error, 'api.saveFailed'));
       },
     });
   }
@@ -151,8 +147,8 @@ export class ChildrenPage implements OnInit {
         this.list.set(list);
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set("Impossible de joindre l'API. Vérifiez que le backend est démarré.");
+      error: (error: unknown) => {
+        this.error.set(httpErrorMessage(error, 'children.loadFailed'));
         this.loading.set(false);
       },
     });

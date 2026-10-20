@@ -35,6 +35,7 @@ import {
   toPayload,
 } from '../../utils/child-form.utils';
 import { RouterLink } from '@angular/router';
+import { ErrorMessagePipe } from '../../../../shared/pipes/error-message.pipe';
 import { todayIsoDate } from '../../../../shared/utils/date.utils';
 import {
   absenceLabel,
@@ -69,7 +70,7 @@ const PARENTS_VALIDATORS = [Validators.minLength(1), distinctEmailsValidator];
 @Component({
   selector: 'app-child-form',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, EnrollmentBadge, RouterLink],
+  imports: [ReactiveFormsModule, EnrollmentBadge, RouterLink, ErrorMessagePipe],
   templateUrl: './child-form.html',
   styleUrl: './child-form.scss',
 })

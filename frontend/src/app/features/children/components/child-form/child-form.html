@@ -44,7 +44,7 @@
             [class.invalid]="isInvalid('firstName')"
           />
           @if (isInvalid('firstName')) {
-            <small class="error">Le prénom est obligatoire.</small>
+            <small class="error">{{ 'field.firstNameRequired' | errorMessage }}</small>
           }
         </label>
         <label class="field">
@@ -56,14 +56,14 @@
             [class.invalid]="isInvalid('lastName')"
           />
           @if (isInvalid('lastName')) {
-            <small class="error">Le nom est obligatoire.</small>
+            <small class="error">{{ 'field.lastNameRequired' | errorMessage }}</small>
           }
         </label>
         <label class="field">
           <span>Date de naissance</span>
           <input type="date" formControlName="birthDate" [class.invalid]="isInvalid('birthDate')" />
           @if (isInvalid('birthDate')) {
-            <small class="error">La date de naissance est obligatoire.</small>
+            <small class="error">{{ 'field.birthDateRequired' | errorMessage }}</small>
           }
         </label>
       </div>
@@ -81,9 +81,9 @@
             [class.invalid]="isInvalid('enrollmentStart') || hasDateError('startBeforeBirth')"
           />
           @if (isInvalid('enrollmentStart')) {
-            <small class="error">La date de début est obligatoire.</small>
+            <small class="error">{{ 'field.startDateRequired' | errorMessage }}</small>
           } @else if (hasDateError('startBeforeBirth')) {
-            <small class="error">L'inscription ne peut pas commencer avant la naissance.</small>
+            <small class="error">{{ 'child.startBeforeBirth' | errorMessage }}</small>
           }
         </label>
         <label class="field">
@@ -94,7 +94,7 @@
             [class.invalid]="hasDateError('endBeforeStart')"
           />
           @if (hasDateError('endBeforeStart')) {
-            <small class="error">La fin doit être le même jour ou après le début.</small>
+            <small class="error">{{ 'child.endBeforeStart' | errorMessage }}</small>
           } @else {
             <small class="hint">Laissez vide si la date de fin n'est pas encore connue.</small>
           }
@@ -144,7 +144,7 @@
                   [class.invalid]="isInvalid('parents.' + i + '.firstName')"
                 />
                 @if (isInvalid('parents.' + i + '.firstName')) {
-                  <small class="error">Le prénom est obligatoire.</small>
+                  <small class="error">{{ 'field.firstNameRequired' | errorMessage }}</small>
                 }
               </label>
               <label class="field">
@@ -156,7 +156,7 @@
                   [class.invalid]="isInvalid('parents.' + i + '.lastName')"
                 />
                 @if (isInvalid('parents.' + i + '.lastName')) {
-                  <small class="error">Le nom est obligatoire.</small>
+                  <small class="error">{{ 'field.lastNameRequired' | errorMessage }}</small>
                 }
               </label>
               <label class="field">
@@ -168,9 +168,9 @@
                   [class.invalid]="isInvalid('parents.' + i + '.email')"
                 />
                 @if (hasError('parents.' + i + '.email', 'required')) {
-                  <small class="error">L'e-mail est obligatoire.</small>
+                  <small class="error">{{ 'field.emailRequired' | errorMessage }}</small>
                 } @else if (isInvalid('parents.' + i + '.email')) {
-                  <small class="error">Adresse e-mail invalide.</small>
+                  <small class="error">{{ 'field.emailInvalid' | errorMessage }}</small>
                 }
               </label>
               <label class="field">
@@ -183,9 +183,9 @@
                   [class.invalid]="isInvalid('parents.' + i + '.phone')"
                 />
                 @if (hasError('parents.' + i + '.phone', 'required')) {
-                  <small class="error">Le téléphone est obligatoire.</small>
+                  <small class="error">{{ 'field.phoneRequired' | errorMessage }}</small>
                 } @else if (isInvalid('parents.' + i + '.phone')) {
-                  <small class="error">Numéro de téléphone invalide.</small>
+                  <small class="error">{{ 'field.phoneInvalid' | errorMessage }}</small>
                 }
               </label>
             </div>
@@ -193,7 +193,7 @@
         }
       </div>
       @if (parents.hasError('duplicateEmail')) {
-        <p class="error" role="alert">Chaque parent doit avoir une adresse e-mail différente.</p>
+        <p class="error" role="alert">{{ 'child.parentEmailsUnique' | errorMessage }}</p>
       }
       <p class="hint">
         Un parent est reconnu par son e-mail : s'il est déjà inscrit pour un frère ou une sœur, sa
@@ -255,9 +255,7 @@
               </label>
             </div>
             @if (contact.invalid && contact.touched) {
-              <small class="error"
-                >Tous les champs du contact sont obligatoires (téléphone valide).</small
-              >
+              <small class="error">{{ 'child.contactIncomplete' | errorMessage }}</small>
             }
             <button
               type="button"
@@ -311,7 +309,7 @@
     @if (saveError(); as message) {
       <p class="error" role="alert">{{ message }}</p>
     } @else if (form.invalid && submitted()) {
-      <p class="error">Certains champs sont à corriger.</p>
+      <p class="error">{{ 'form.invalid' | errorMessage }}</p>
     } @else {
       <span></span>
     }
