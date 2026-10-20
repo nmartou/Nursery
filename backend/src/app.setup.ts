@@ -1,11 +1,18 @@
 import { type INestApplication, ValidationPipe } from '@nestjs/common';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter.js';
+import { validationExceptionFactory } from './common/validation/validation-exception.factory.js';
 import type { AppConfig } from './config/app.config.js';
 
 /** Global HTTP setup shared by `main.ts` and the e2e tests. */
 export function setupApp(app: INestApplication, config: AppConfig): void {
   app.setGlobalPrefix(config.globalPrefix);
   app.enableCors({ origin: config.corsOrigin });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      exceptionFactory: validationExceptionFactory,
+    }),
+  );
   app.useGlobalFilters(new HttpExceptionFilter());
 }
