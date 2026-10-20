@@ -53,4 +53,18 @@ describe('DailyReportMapper', () => {
     expect(content.naps).toEqual([{ startTime: '12:00', endTime: null }]);
     expect(content.stoolComment).toBeNull();
   });
+
+  it('keeps the stool comment of abnormal stools and nulls missing quantities', () => {
+    const dto = {
+      ...EMPTY_REPORT_CONTENT,
+      meals: [{ label: 'Compote' }],
+      bottles: [{ time: '09:30' }],
+      stoolStatus: 'other',
+      stoolComment: ' Liquides ',
+    } as UpdateDailyReportDto;
+    const content = DailyReportMapper.toContent(dto);
+    expect(content.meals).toEqual([{ label: 'Compote', quantityGrams: null }]);
+    expect(content.bottles).toEqual([{ time: '09:30', quantityMl: null }]);
+    expect(content.stoolComment).toBe('Liquides');
+  });
 });
