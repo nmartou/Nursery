@@ -88,6 +88,53 @@ describe('DailyReportsService', () => {
     });
   });
 
+  it('lists the most recent weekday when no date is given', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date(2026, 9, 18, 10, 0)); // Sunday
+      await expect(service.listForDate()).resolves.toMatchObject({
+        date: '2026-10-16',
+      });
+      expect(repository.findByDate).toHaveBeenCalledWith('2026-10-16');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('counts nothing on a closed day and says why', async () => {
+    repository.closureOn.mockResolvedValueOnce('Armistice');
+    await expect(service.statsForDate('2026-11-11')).resolves.toEqual({
+      date: '2026-11-11',
+      closure: 'Armistice',
+      total: 0,
+      byStatus: { todo: 0, in_progress: 0, complete: 0, absent: 0 },
+    });
+  });
+
+  it('returns a report with its status and planned absence', async () => {
+    await expect(service.getById('r1')).resolves.toMatchObject({
+      id: 'r1',
+      childFirstName: 'Léa',
+      status: 'todo',
+      plannedAbsence: null,
+    });
+  });
+
+  it('saves the normalized content of the report', async () => {
+    await service.update('r1', {
+      ...EMPTY_REPORT_CONTENT,
+      absenceComment: '  ',
+      meals: [{ label: ' Purée ', quantityGrams: 120 }],
+      stoolComment: 'Ignored while the stools are normal',
+      parentNote: ' Bonne journée ',
+    });
+    expect(repository.update).toHaveBeenCalledWith('r1', {
+      ...EMPTY_REPORT_CONTENT,
+      meals: [{ label: 'Purée', quantityGrams: 120 }],
+      parentNote: 'Bonne journée',
+    });
+  });
+
   it('refuses weekends without querying the database', async () => {
     await expect(service.listForDate('2026-10-17')).rejects.toBeInstanceOf(
       BadRequestException,
